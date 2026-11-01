@@ -1,7 +1,7 @@
 <p align="center">
-  <img src="gfx/ui/items/weapons/legendary/chaos_mind.png" height="160" alt="Chaos Mind">
-  &nbsp;&nbsp;
-  <img src="gfx/ui/items/weapons/legendary/chaos_mind_500.png" height="160" alt="Chaos Mind, gorged form">
+  <img src="docs/images/sprite_icon_chaos_mind_01.png" height="150" alt="Chaos Mind">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="docs/images/sprite_icon_chaos_mind_500.png" height="150" alt="Chaos Mind, gorged form">
 </p>
 
 <h1 align="center">Chaos Weapon Mod</h1>
