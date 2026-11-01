@@ -1,0 +1,55 @@
+/* Hotkey notice window (notice.js) */
+.chaos-notice-screen
+{
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 9998 !important;
+	pointer-events: none;
+}
+
+.chaos-notice-dialog
+{
+	position: absolute;
+	left: 50%;
+	top: 18%;
+	width: 56.0rem;
+	margin-left: -28.0rem;
+	padding: 2.0rem 3.0rem;
+	box-sizing: border-box;
+	background-image: url("coui://gfx/ui/skin/dialog_background_03.png");
+	background-size: 100% 100%;
+	background-repeat: no-repeat;
+	pointer-events: auto;
+}
+
+.chaos-notice-title
+{
+	text-align: center;
+	margin-bottom: 1.2rem;
+}
+
+.chaos-notice-line
+{
+	text-align: center;
+	margin-bottom: 0.8rem;
+}
+
+.chaos-notice-button-layout
+{
+	position: relative;
+	width: 14.0rem;
+	height: 4.3rem;
+	margin: 1.2rem auto 0 auto;
+}
+
+.chaos-notice-dialog .chaos-notice-button
+{
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100% !important;
+	height: 100% !important;
+}

@@ -1,0 +1,129 @@
+/* Chaos Guide window (guide.js) */
+.chaos-guide-screen
+{
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.55);
+	z-index: 9998 !important;
+}
+
+.chaos-guide-dialog
+{
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 96.0rem;
+	height: 64.0rem;
+	margin-left: -48.0rem;
+	margin-top: -32.0rem;
+	padding: 2.5rem 3.5rem;
+	box-sizing: border-box;
+	background-image: url("coui://gfx/ui/skin/dialog_background_03.png");
+	background-size: 100% 100%;
+	background-repeat: no-repeat;
+}
+
+.chaos-guide-title
+{
+	text-align: center;
+	height: 4.0rem;
+}
+
+.chaos-guide-columns
+{
+	position: absolute;
+	left: 3.5rem;
+	right: 3.5rem;
+	top: 7.0rem;
+	bottom: 8.0rem;
+	display: flex;
+}
+
+.chaos-guide-index
+{
+	width: 22.0rem;
+	height: 100%;
+	overflow-y: auto;
+	padding-right: 1.0rem;
+	box-sizing: border-box;
+	border-right: 0.1rem solid rgba(192, 96, 255, 0.35);
+}
+
+.chaos-guide-entry
+{
+	padding: 0.5rem 0.8rem;
+	cursor: pointer;
+}
+
+.chaos-guide-entry:hover
+{
+	background-color: rgba(192, 96, 255, 0.15);
+}
+
+.chaos-guide-entry.is-selected
+{
+	background-color: rgba(192, 96, 255, 0.30);
+	color: #e0c0ff;
+}
+
+.chaos-guide-page
+{
+	flex: 1;
+	height: 100%;
+	overflow-y: auto;
+	padding: 0 1.5rem 0 2.0rem;
+	box-sizing: border-box;
+}
+
+.chaos-guide-chapter
+{
+	color: #c060ff;
+	margin-bottom: 1.2rem;
+}
+
+.chaos-guide-heading
+{
+	margin: 1.4rem 0 0.6rem 0;
+}
+
+.chaos-guide-paragraph
+{
+	margin-bottom: 0.8rem;
+}
+
+.chaos-guide-bullet
+{
+	position: relative;
+	padding-left: 1.6rem;
+	margin-bottom: 0.5rem;
+}
+
+.chaos-guide-bullet:before
+{
+	content: "\2022";
+	position: absolute;
+	left: 0.2rem;
+	color: #c060ff;
+}
+
+.chaos-guide-button-layout
+{
+	position: absolute;
+	left: 50%;
+	bottom: 2.5rem;
+	width: 14.0rem;
+	height: 4.3rem;
+	margin-left: -7.0rem;
+}
+
+.chaos-guide-dialog .chaos-guide-button
+{
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100% !important;
+	height: 100% !important;
+}

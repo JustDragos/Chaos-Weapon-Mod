@@ -1,0 +1,119 @@
+/* The Frozen Eye brother picker (altar.js) */
+.chaos-altar-screen
+{
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.6);
+	z-index: 9998 !important;
+}
+
+.chaos-altar-dialog
+{
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 60.0rem;
+	height: 66.0rem;
+	margin-left: -30.0rem;
+	margin-top: -33.0rem;
+	padding: 2.5rem 3.5rem;
+	box-sizing: border-box;
+	background-image: url("coui://gfx/ui/skin/dialog_background_03.png");
+	background-size: 100% 100%;
+	background-repeat: no-repeat;
+}
+
+.chaos-altar-header
+{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 7.0rem;
+}
+
+.chaos-altar-eye
+{
+	width: 5.6rem;
+	height: 5.6rem;
+	margin-right: 1.5rem;
+}
+
+.chaos-altar-hint
+{
+	text-align: center;
+	margin: 0.6rem 0 1.0rem 0;
+}
+
+.chaos-altar-list
+{
+	height: 38.0rem;
+	overflow-y: auto;
+	border: 0.1rem solid rgba(140, 110, 70, 0.6);
+	background-color: rgba(0, 0, 0, 0.35);
+	padding: 0.4rem;
+	box-sizing: border-box;
+}
+
+.chaos-altar-row
+{
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.6rem 1.0rem;
+	margin-bottom: 0.3rem;
+	border: 0.1rem solid transparent;
+	cursor: pointer;
+}
+
+.chaos-altar-row:hover
+{
+	background-color: rgba(255, 255, 255, 0.07);
+}
+
+.chaos-altar-row.is-chosen
+{
+	background-color: rgba(120, 30, 150, 0.45);
+	border-color: rgba(190, 90, 255, 0.85);
+}
+
+.chaos-altar-list.is-full .chaos-altar-row:not(.is-chosen)
+{
+	opacity: 0.45;
+}
+
+.chaos-altar-info
+{
+	font-size: 1.3rem;
+}
+
+.chaos-altar-counter
+{
+	text-align: center;
+	margin: 1.2rem 0;
+}
+
+.chaos-altar-actions
+{
+	display: flex;
+	justify-content: center;
+}
+
+.chaos-altar-button-layout
+{
+	position: relative;
+	width: 17.0rem;
+	height: 4.3rem;
+	margin: 0 1.0rem;
+}
+
+.chaos-altar-dialog .chaos-altar-button
+{
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100% !important;
+	height: 100% !important;
+}
