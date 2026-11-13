@@ -3,6 +3,7 @@
 // Chaos Guide window: chapters on the left, the chosen chapter's text on the right (scrolls).
 // Backend: scripts/mods/chaos_mind/guide_screen.nut; text from ::ChaosMind.Guide.getChapters().
 // In a chapter's lines, "# " starts a heading, "- " a bullet, anything else is a paragraph.
+// A chapter's optional Kind ("ability", "perk"...) is shown in brackets after its title.
 var ChaosMindGuideScreen = function ()
 {
 	MSUUIScreen.call(this);
@@ -62,6 +63,7 @@ ChaosMindGuideScreen.prototype.show = function (_data)
 	this.mChapters.forEach(function (_chapter, _i)
 	{
 		var entry = $('<div class="chaos-guide-entry text-font-normal font-color-description"/>').text(_chapter.Title);
+		self.appendKind(entry, _chapter);
 		entry.click(function ()
 		{
 			self.showChapter(_i);
@@ -83,7 +85,9 @@ ChaosMindGuideScreen.prototype.showChapter = function (_i)
 	this.mIndex.children().eq(_i).addClass('is-selected');
 
 	page.empty();
-	page.append($('<div class="chaos-guide-chapter title-font-normal font-bold font-color-title"/>').text(chapter.Title));
+	var heading = $('<div class="chaos-guide-chapter title-font-normal font-bold font-color-title"/>').text(chapter.Title);
+	this.appendKind(heading, chapter);
+	page.append(heading);
 
 	chapter.Lines.forEach(function (_line)
 	{
@@ -102,6 +106,14 @@ ChaosMindGuideScreen.prototype.showChapter = function (_i)
 	});
 
 	page.scrollTop(0);
+};
+
+ChaosMindGuideScreen.prototype.appendKind = function (_div, _chapter)
+{
+	if (_chapter.Kind)
+	{
+		_div.append($('<span class="chaos-guide-kind"/>').text(' (' + _chapter.Kind + ')'));
+	}
 };
 
 registerScreen("ChaosMindGuideScreen", new ChaosMindGuideScreen());

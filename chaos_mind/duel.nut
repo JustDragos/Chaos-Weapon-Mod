@@ -157,6 +157,13 @@
     // Called instead of the engage dialog. Returns true if a challenge was issued.
     function challenge( _isPlayerInitiated, _pos )
     {
+        // Off by default since 13 Nov: every duel still crashed at round start after three fixes
+        // (Mod Settings -> Chaos Mind -> Gameplay -> Leader duels).
+        if (!::ChaosMind.Settings.areDuelsOn())
+        {
+            return false;
+        }
+
         if (_pos == null)
         {
             _pos = ::World.State.getPlayer().getPos();
@@ -254,28 +261,20 @@
         p.IsUsingSetPlayers = true;
         p.Players = [ bro ];
         p.IsFleeingProhibited = true;
-        p.IsAutoAssigningBases = false;
-        p.Entities = [];
+        p.Entities = [ this.makeDuelTroop(c.Leader) ];
 
-        // The leader fights for the built-in enemy faction, unlinked from his world party, the way
-        // events build their enemies (e.g. Legends' religious_peasants_event): with
-        // IsAutoAssigningBases off, a world faction (Bandits, Barbarians...) gets no battlefield
-        // setup, and the game crashed at round start and at his turn ("Class/Structure with key
-        // "" is not registered", 1 Nov, twice). His troop keeps its name and champion roll.
-        local t = clone c.Leader;
-        t.Faction <- ::Const.Faction.Enemy;
-
-        if ("Party" in t)
-        {
-            delete t.Party;
-        }
-
-        p.Entities.push(t);
-
+        // IsAutoAssigningBases stays on (13 Nov). With it off, every duel crashed at round start
+        // and again at the leader's turn ("Class/Structure with key "" is not registered": 1 Nov
+        // twice, 13 Nov against The Ten). Moving the leader to the built-in enemy faction didn't
+        // help; normal battles and contract battles against that faction leave it on and work.
         p.AfterDeploymentCallback = function()
         {
             ::ChaosMind.Duel.onDuelDeployed();
         };
+
+        // The party may challenge again until the duel is over, so a crash can be retried from
+        // the autosave the game makes as the duel starts (markOffered sets it again afterwards).
+        c.Party.getFlags().remove(this.OfferedFlag);
 
         ::logInfo("Chaos Mind: " + bro.getName() + " duels " + c.LeaderName + ".");
         _event.registerToShowAfterCombat("Won", "Lost");
@@ -283,10 +282,38 @@
         return 0;
     }
 
+    // A clean battle entry for the leader, like the ones events build from a troop type: only the
+    // fields a battle reads, in the built-in enemy faction, with no link to his world party.
+    function makeDuelTroop( _leader )
+    {
+        local t = { Faction = ::Const.Faction.Enemy, Name = "" };
+
+        foreach (key in [ "ID", "Variant", "Row", "Script", "Name", "Strength", "Cost" ])
+        {
+            if (key in _leader)
+            {
+                t[key] <- _leader[key];
+            }
+        }
+
+        return t;
+    }
+
+    function markOffered()
+    {
+        local c = this.Current;
+
+        if (c != null && !::MSU.isNull(c.Party) && c.Party.isAlive())
+        {
+            c.Party.getFlags().set(this.OfferedFlag, true);
+        }
+    }
+
     // In the duel: the only enemy on the field is the leader; give him his squad's strength.
     function onDuelDeployed()
     {
         local c = this.Current;
+        ::logInfo("Chaos Mind: duel deployed.");
 
         if (c == null || c.Buff <= 0)
         {
@@ -305,6 +332,7 @@
                     actor.getSkills().update();
                     actor.setHitpoints(actor.getHitpointsMax());
                     actor.setDirty(true);
+                    ::logInfo("Chaos Mind: " + actor.getName() + " gets the duel buff (+" + (c.Buff * 100).tointeger() + "%).");
                 }
             }
         }
@@ -357,6 +385,8 @@
             return;
         }
 
+        this.markOffered();
+
         if (_morale != null && !::MSU.isNull(c.Party))
         {
             this.PendingMorale = { Faction = c.Party.getFaction(), State = _morale, Day = ::World.getTime().Days };
@@ -394,6 +424,7 @@
     // The leader fell and he had no men: his party is beaten.
     function endWithoutBattle()
     {
+        this.markOffered();
         local c = this.Current;
         this.Current = null;
 

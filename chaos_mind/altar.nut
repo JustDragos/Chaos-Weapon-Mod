@@ -27,9 +27,10 @@
 
     function find()
     {
+        // Skips one that's dying: saving takes it off the map for a moment (save_safety.nut).
         foreach (location in ::World.EntityManager.getLocations())
         {
-            if (location.getTypeID() == this.TypeID)
+            if (location.getTypeID() == this.TypeID && (!("isAlive" in location) || location.isAlive()))
             {
                 return location;
             }
@@ -235,6 +236,12 @@
             return;
         }
 
+        // Removed for good once claimed (removeClaimed), so it isn't brought back.
+        if (this.isClaimed() && ::ChaosMind.Settings.isSaveSafetyOn())
+        {
+            return;
+        }
+
         local tile = this.findSpawnTile();
 
         if (tile == null)
@@ -314,33 +321,69 @@
         }
     }
 
-    // Adds a sacrificed brother to the company's fallen list (obituary). The game's function
-    // signature couldn't be read (encrypted scripts) and (bro, text) is rejected with "wrong
-    // number of parameters", so the other likely forms are tried in turn.
+    // Adds a sacrificed brother to the company's fallen list (obituary).
+    // Fixed 13 Nov: addFallen takes a record, not the brother. It used to be given the brother
+    // object, which the obituary showed as "undefined" and which the save wrote as nothing while
+    // still counting it, so the next section was read wrong: "Corrupt data before FoW". The record's
+    // fields and their order, read from the saves' own obituary data, are: Name (string), Time,
+    // TimeWithCompany, Kills, Battles (U32 each), KilledBy (string), Expendable (bool).
     function recordFallen( _bro )
     {
-        local text = "Sacrificed to Chaos Mind";
-        local attempts = [
-            [ ::World.Statistics, _bro ],
-            [ ::World.Statistics, _bro, text, 0 ],
-            [ ::World.Statistics, _bro, text, 0, 0 ],
-            [ ::World.Statistics, _bro, text ]
-        ];
+        local days = 1;
+        local kills = 0;
+        local battles = 0;
 
-        foreach (args in attempts)
+        try
         {
-            try
+            days = ::Math.max(1, _bro.getDaysWithCompany());
+            kills = _bro.m.LifetimeStats.Kills;
+            battles = _bro.m.LifetimeStats.Battles;
+        }
+        catch (e)
+        {
+        }
+
+        try
+        {
+            ::World.Statistics.addFallen({
+                Name = _bro.getName(),
+                Time = ::World.getTime().Days,
+                TimeWithCompany = days,
+                Kills = kills,
+                Battles = battles,
+                KilledBy = "Offered to The Frozen Eye",
+                Expendable = false
+            });
+            ::logInfo("Chaos Mind: recorded " + _bro.getName() + " as fallen.");
+        }
+        catch (e)
+        {
+            ::logWarning("Chaos Mind: could not record " + _bro.getName() + " as fallen (" + e + ").");
+        }
+    }
+
+    // Before every save: drops obituary entries that aren't proper records (left by the old
+    // recordFallen in a running session), so they can't corrupt the save.
+    function cleanFallen()
+    {
+        local fallen = ::World.Statistics.m.Fallen;
+        local dropped = 0;
+
+        for (local i = fallen.len() - 1; i >= 0; i--)
+        {
+            local f = fallen[i];
+
+            if (typeof f != "table" || !("Name" in f) || !("KilledBy" in f) || !("Expendable" in f))
             {
-                ::World.Statistics.addFallen.acall(args);
-                ::logInfo("Chaos Mind: recorded " + _bro.getName() + " as fallen (" + (args.len() - 1) + " argument(s)).");
-                return;
-            }
-            catch (e)
-            {
+                fallen.remove(i);
+                dropped += 1;
             }
         }
 
-        ::logWarning("Chaos Mind: could not record " + _bro.getName() + " as fallen.");
+        if (dropped > 0)
+        {
+            ::logWarning("Chaos Mind: removed " + dropped + " broken obituary entr" + (dropped == 1 ? "y" : "ies") + " before saving.");
+        }
     }
 
     function offer( _ids )
@@ -411,7 +454,31 @@
         ::logInfo("Chaos Mind: claimed at The Frozen Eye; sacrificed " + this.LastSacrificed.len() + " brothers.");
         this.fireEvent("Offered");
     }
+
+    // With the Saves setting on (save_safety.nut): a claimed altar is taken off the map for good, on
+    // the world map with a clear screen, never during a save (removing it during one corrupted a
+    // save, 13 Nov). Its custom class would otherwise keep every save needing the mod.
+    function removeClaimed()
+    {
+        if (!this.isClaimed() || !::ChaosMind.Settings.isSaveSafetyOn() || !::ChaosMind.SoulArrow.canShowEvent())
+        {
+            return;
+        }
+
+        local altar = this.find();
+
+        if (altar != null)
+        {
+            altar.die();
+            ::logInfo("Chaos Mind: the claimed Frozen Eye is gone from the map.");
+        }
+    }
 };
+
+::ChaosMind.addWorldCheck("claimed Frozen Eye", function()
+{
+    ::ChaosMind.Altar.removeClaimed();
+});
 
 
 // Ctrl+F on the world map: where is The Frozen Eye? Rebindable in Mod Settings.

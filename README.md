@@ -30,6 +30,8 @@
 - [Armor Fixer](#armor-fixer)
 - [Perks](#perks)
 - [The Black Skull](#the-black-skull)
+- [Army of the Past](#army-of-the-past)
+- [Aura of 10](#aura-of-10)
 - [Leader duels](#leader-duels)
 - [Chaos Guide](#chaos-guide)
 - [Hotkeys](#hotkeys)
@@ -47,8 +49,10 @@
 
 To build the zip yourself, zip the folders `brushes`, `chaos_mind`, `gfx`, `scripts` and `ui` so that they sit at the top level of the zip.
 
-> [!WARNING]
-> Removing the mod breaks any save that contains the sword, The Frozen Eye, the Soul Arrow, an Armor Fixer or the Chaos Guide.
+> [!NOTE]
+> **Optional, off by default:** Mod Settings → Chaos Mind → Saves → *Saves load without the mod (experimental)*. With it on, saves keep the mod's items, perks and contracts as plain data so they still load if the mod is removed, and get them back when it's installed again. Before the sword is claimed, saves always need the mod.
+>
+> **Leader duels are off by default** (Mod Settings → Chaos Mind → Gameplay): they have crashed the game at their first round.
 
 ## Abilities at a glance
 
@@ -65,7 +69,9 @@ To build the zip yourself, zip the folders `brushes`, `chaos_mind`, `gfx`, `scri
 | | Perk | Tier |
 |:-:|---|:-:|
 | <img src="gfx/skills/chaos_mind/chaos_protection.png" width="48"> | **Chaos Protection** | 1 |
+| <img src="gfx/skills/chaos_mind/vampire_allegiance.png" width="48"> | **Vampire Allegiance** | 2 |
 | <img src="gfx/skills/chaos_mind/only_chaos_matters.png" width="48"> | **Only Chaos Matters** | 3 |
+| <img src="gfx/skills/chaos_mind/troll_allegiance.png" width="48"> | **Troll Allegiance** | 3 |
 | <img src="gfx/skills/chaos_mind/used_to_it_perk.png" width="48"> | **Used to It** | 4 |
 | <img src="gfx/skills/chaos_mind/chaos_armor.png" width="48"> | **Chaos Armor** | 5 |
 | <img src="gfx/skills/chaos_mind/fatigue_transfer_perk.png" width="48"> | **Fatigue Transfer** | 6 |
@@ -182,7 +188,9 @@ A field repair kit; every armorer, north and south, stocks up to 3. Carry it in 
 | | Perk | Effect |
 |:-:|---|---|
 | <img src="gfx/skills/chaos_mind/chaos_protection.png" width="48"> | **Chaos Protection** (tier 1) | Immune to the black cloud and the curse. Can't be sacrificed. Never flees from sacrifice terror. Untouched by Chaos Circle. **−20 Resolve.** |
+| <img src="gfx/skills/chaos_mind/vampire_allegiance.png" width="48"> | **Vampire Allegiance** (tier 2) | Every kill heals him for 5% of the victim's maximum hitpoints, never above his own. Any weapon. |
 | <img src="gfx/skills/chaos_mind/only_chaos_matters.png" width="48"> | **Only Chaos Matters** (tier 3) | Immune to Hexe charm and Geist screams. No morale loss when allies die. Never flees from sacrifice terror. Other brothers can't raise his morale, and they come to hate him: mood drops after each sacrifice, after each battle and every day. |
+| <img src="gfx/skills/chaos_mind/troll_allegiance.png" width="48"> | **Troll Allegiance** (tier 3) | All his recovery +20%: fatigue each turn in battle (15 → 18), hitpoints and injuries healing on the world map, and Vampire Allegiance's healing. |
 | <img src="gfx/skills/chaos_mind/used_to_it_perk.png" width="48"> | **Used to It** (tier 4) | Every attack that misses him gives +1 Melee and Ranged Defense until the battle ends, up to +10. Dodging costs no fatigue. |
 | <img src="gfx/skills/chaos_mind/chaos_armor.png" width="48"> | **Chaos Armor** (tier 5) | While wielding Chaos Mind: +1 Melee and Ranged Defense per +1% damage from kills, no cap. Melee Skill scaling doubles to +1% per point. |
 | <img src="gfx/skills/chaos_mind/fatigue_transfer_perk.png" width="48"> | **Fatigue Transfer** (tier 6) | Grants the skill: 1 AP, moves all your fatigue onto an adjacent enemy (up to his maximum). Once every 3 turns. |
@@ -196,26 +204,44 @@ A three-part hunt that opens as the blade feeds: **100**, **200** and **500** ki
 
 ```mermaid
 flowchart TD
-    A[Blade reaches 100 / 200 / 500 kills] --> B[Enter any town]
-    B --> C{The Black Skull}
-    C -- Not now --> D[Offered again tomorrow]
-    D --> B
-    C -- Hunt them --> E[Marked party spawns 5–9 tiles away<br/>black skull banner, ring on the map<br/>led by a champion]
+    A[Blade reaches 100 / 200 / 500 kills] --> B[The next town you come to<br/>offers it as a contract]
+    B --> C{The Black Skull contract}
+    C -- Not now --> B
+    C -- Negotiate and accept --> E[Marked party spawns 5–9 tiles away<br/>black skull banner, ring on the map<br/>led by a champion]
     E --> F[Ctrl+F shows where it is]
     F --> G{Did Chaos Mind<br/>kill the leader?}
-    G -- yes, party destroyed --> H[Part done:<br/>more max fatigue]
-    G -- no, party gone anyway --> D
+    G -- yes, party destroyed --> H[Part done: more max fatigue<br/>return to the town to be paid]
+    G -- no, party gone anyway --> D[Contract failed<br/>offered again tomorrow]
+    D --> B
 ```
 
 | Part | Kills | Enemy | Reward rate |
 |:-:|:-:|---|:-:|
-| I | 100 | Black Skull Brigands, led by a brigand champion | 0.1 |
-| II | 200 | Black Skull Reavers, led by a barbarian champion | 0.25 |
-| III | 500 | Black Skull Warband, led by an orc warlord champion | 0.5 |
+| I | 100 | Black Skull Brigands: five brigand champions, one of them the leader | 0.1 |
+| II | 200 | Black Skull Reavers: twelve barbarian champions, one of them the leader | 0.25 |
+| III | 500 | Black Skull Warband: fourteen orc champions, led by an orc warlord | 0.5 |
 
 **Reward:** while wielding Chaos Mind, the brother gets **extra max fatigue equal to the rate × the blade's damage bonus from kills**, rounded down. It keeps growing as the blade kills.
 
 <img src="docs/images/concept_black_skull_reward.svg" alt="Extra max fatigue against blade kills after each part">
+
+## Army of the Past
+
+<img src="gfx/ui/chaos_mind/army_quest.png" width="60" align="right" alt="Army of the Past">
+
+A three-part contract against hosts of the dead, offered by the next town you come to (purple banner, white skull): **50** skeletons at **100** kills, **100** at **200**, **150** at **500**. The host stands near the town in groups of 50, one battle each; destroy them all, then return to be paid.
+
+The skeletons are plain Ancient Auxiliaries with half their usual hitpoints, never champions (not even from the blade), and their turns play six times faster so you don't wait on them. Every one the blade kills counts towards its kills.
+
+## Aura of 10
+
+<img src="gfx/ui/items/accessory/aura_of_10.png" width="70" align="right" alt="Aura of 10">
+
+At **250 kills** on the blade, the next town you come to offers a contract to hunt **The Ten** (with a purple banner, paid in crowns as well): one party of ten named human champions, marked on the map near that town and left alone by other parties (Ctrl+F shows where). Kill all ten and you get **Aura of 10**, an amulet for the accessory slot. The hunt can't fail.
+
+While any brother wears it, the company counts on the world map as at least **a company of ten seasoned men** (strength 220). Small and weak parties won't attack you and keep away, so you skip easy fights.
+
+Every hunt is a real contract, so the game's own active-contract panel shows what to do, and its targets (the Black Skull party, The Ten, each Army of the Past group) are shown on the map from the moment they spawn, through the fog of war.
 
 ## Leader duels
 
@@ -249,6 +275,28 @@ A book with the full explanation of every item, skill and perk above, so the too
 | **Ctrl+G** | World map, battle | Open or close the Chaos Guide |
 
 All of them can be changed in Mod Settings.
+
+## Mod Settings
+
+**Mod Settings → Chaos Mind → Leveling:**
+
+| Setting | Range | Default | Normal game |
+|---|---|---|---|
+| Perk points per level | 1–10 | 1 | 1 |
+| Attribute level-ups per level (rounds of raising three attributes) | 1–5 | **2** | 1 |
+| XP multiplier | ×0.5–×20 | ×1 | ×1 |
+
+Settings are stored in each save: a new campaign starts with the defaults, an older save keeps its own values.
+
+Extra attribute rounds get their own rolled values, so talents still count. Brothers a campaign starts with above level 1 (the Lone Wolf starts at level 4) get the settings on their starting levels too:
+
+<p align="center">
+  <img src="docs/images/leveling_lone_wolf.webp" width="700" alt="A new Lone Wolf with perk points at 10 and attribute level-ups at 5: 30 perk points and the level-up button">
+  <br>
+  <em>A new Lone Wolf with perk points per level at 10 and attribute level-ups at 5: 30 perk points to spend at the start.</em>
+</p>
+
+**Mod Settings → Chaos Mind → Recruiting:** *Extra recruits per town*, 0–20, default **12** (0 is the normal game). Every town offers that many more recruits each time its recruits refresh; changing it in a campaign refreshes them at once.
 
 ## Status
 

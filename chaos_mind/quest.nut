@@ -1,6 +1,6 @@
 // The Black Skull: a three-part hunt that unlocks as Chaos Mind's kills grow (100, 200, 500).
-//  - When the company's blade has enough kills for the next part and the company enters a town
-//    (comes within NearTownDistance of it), the event event.chaos_mind_quest offers the hunt.
+//  - When the company's blade has enough kills for the next part, the town the company comes to
+//    offers it as a real contract (chaos_mind/contracts.nut), paid in crowns as well.
 //  - Accepting spawns a marked party (black skull banner, selection ring on the map) a few tiles
 //    from that town, led by a guaranteed champion. AI parties leave it alone (setAttackableByAI).
 //  - The leader must die to Chaos Mind (its wielder's attacks, cloud or curse; chaos_mind_effect
@@ -32,32 +32,46 @@
     LeaderMinibossify = 1000,
 
     Tiers = [
+        // Pay and DifficultyMult: the contract's crowns before haggling, and its skulls in town.
+        // Champions: the party is just these champions plus the leader, instead of the template's
+        // men (::ChaosMind.Aura.getChampionType forces the roll; a missing type is a Bandit Leader).
+        // Part 1: five in all (13 Nov). Part 2: twelve (14 Nov, the plain barbarians were too easy).
+        // Part 3: fourteen orcs (14 Nov); ChampionNames: whose names a type without its own borrows.
         {
-            Kills = 100, Rate = 0.1, Name = "Black Skull Brigands", Faction = "Bandits",
+            Kills = 100, Rate = 0.1, Pay = 500, DifficultyMult = 0.85, Name = "Black Skull Brigands", Faction = "Bandits",
             Template = "BanditRaiders", Leader = "BanditLeader", Resources = 260,
-            Description = "Brigands marching under a black skull. Their leader has sworn to take the blade that devours."
+            Champions = [ "BanditRaider", "BanditRaider", "BanditMarksman", "BanditRaider" ],
+            Description = "Five brigand champions marching under a black skull. Their leader has sworn to take the blade that devours."
         },
         {
-            Kills = 200, Rate = 0.25, Name = "Black Skull Reavers", Faction = "Barbarians",
+            Kills = 200, Rate = 0.25, Pay = 1300, DifficultyMult = 1.25, Name = "Black Skull Reavers", Faction = "Barbarians",
             Template = "Barbarians", Leader = "BarbarianChampion", Resources = 450,
-            Description = "Northern reavers under a black skull, come south for the blade they call the Hungry Iron."
+            Champions = [
+                "BarbarianChampion", "BarbarianChampion", "BarbarianChampion", "BarbarianChampion",
+                "BarbarianChampion", "BarbarianChampion", "BarbarianChampion",
+                "BarbarianMarauder", "BarbarianMarauder", "BarbarianMarauder", "BarbarianMarauder"
+            ],
+            Description = "Twelve northern champions under a black skull, come south for the blade they call the Hungry Iron."
         },
         {
-            Kills = 500, Rate = 0.5, Name = "Black Skull Warband", Faction = "Orcs",
+            Kills = 500, Rate = 0.5, Pay = 2200, DifficultyMult = 1.5, Name = "Black Skull Warband", Faction = "Orcs",
             Template = "OrcRaiders", Leader = "OrcWarlord", Resources = 700,
-            Description = "An orc warband under a black skull. Its warlord wants to feed the blade to his own gods."
+            Champions = [
+                "OrcWarrior", "OrcWarrior", "OrcWarrior", "OrcWarrior", "OrcWarrior", "OrcWarrior", "OrcWarrior",
+                "OrcBerserker", "OrcBerserker", "OrcBerserker", "OrcBerserker", "OrcBerserker", "OrcBerserker"
+            ],
+            ChampionNames = "OrcWarlord",
+            Description = "Fourteen orc champions under a black skull. Their warlord wants to feed the blade to his own gods."
         }
     ],
 
-    // Set before the event fires: the town it happens in, the screen to open, the party spawned.
+    // Set before spawning or firing the event: the town it starts from, the screen to open, the
+    // party spawned.
     Town = null,
     PartyName = "",
     PendingScreen = null,
     LastTarget = null,
     LastHourChecked = -1,
-    // Whether the next part is open (enough kills, nothing running, not turned down today);
-    // worked out once an hour, so the per-update town check stays cheap.
-    IsOpen = false,
     StaminaWarningShown = false,
 
     function getFlag( _name )
@@ -138,8 +152,9 @@
         return null;
     }
 
-    // World map, on every update with a clear screen (a world check, see chaos_mind/common.nut).
-    // The running hunt and whether a part is open are checked once an hour; the town every time.
+    // World map, on every update with a clear screen (a world check, see chaos_mind/common.nut):
+    // the running hunt, once an hour, unless its contract runs it. The offer itself is a real
+    // contract (13 Nov, chaos_mind/contracts.nut), no longer an event on entering a town.
     function check()
     {
         if (!::ChaosMind.SoulArrow.canShowEvent())
@@ -153,34 +168,15 @@
         {
             this.LastHourChecked = hour;
 
+            // Shown through the fog even while its contract runs the hunt (older saves too).
             if (this.getActive() != 0)
             {
-                this.IsOpen = false;
-                this.checkActive();
-                return;
+                ::ChaosMind.markTarget(this.getTarget());
             }
 
-            this.IsOpen = this.isNextPartOpen();
+            // No fallback any more (14 Nov): a hunt only runs with its contract, which finishes it;
+            // without one it's called off (::ChaosMind.Contracts.callOffOrphans).
         }
-
-        if (!this.IsOpen)
-        {
-            return;
-        }
-
-        local town = this.findNearTown();
-
-        if (town == null)
-        {
-            return;
-        }
-
-        local done = this.getDone();
-        this.IsOpen = false;
-        this.Town = town;
-        this.PartyName = this.Tiers[done].Name;
-        ::logInfo("Chaos Mind: the Black Skull (part " + (done + 1) + ") is offered at " + town.getName() + ".");
-        this.fireEvent("Offer");
     }
 
     function isNextPartOpen()
@@ -298,7 +294,7 @@
             // spawned before it changed.
             try
             {
-                target.getSprite("selection").Visible = true;
+                ::ChaosMind.markTarget(target);
                 target.getSprite("banner").setBrush(this.Banner);
             }
             catch (e)
@@ -458,11 +454,27 @@
             {
                 _party.setDescription(_def.Description);
                 _party.getSprite("banner").setBrush(this.Banner);
-                _party.getSprite("selection").Visible = true;
+                ::ChaosMind.markTarget(_party);
             } ],
             [ "protection from other parties", function( _party, _def )
             {
                 _party.setAttackableByAI(false);
+            } ],
+            // Parts with a champion list: only those champions (the leader joins them below).
+            [ "its champions", function( _party, _def )
+            {
+                if (!("Champions" in _def))
+                {
+                    return;
+                }
+
+                _party.getTroops().clear();
+
+                foreach (key in _def.Champions)
+                {
+                    local names = ("ChampionNames" in _def) ? _def.ChampionNames : "BanditLeader";
+                    ::Const.World.Common.addTroop(_party, { Type = ::ChaosMind.Aura.getChampionType(key, names) }, true, this.LeaderMinibossify);
+                }
             } ],
             // A champion at its head: the one the blade has to kill.
             [ "a champion leader", function( _party, _def )
@@ -510,15 +522,15 @@
         return _party.getName() + " " + ::ChaosMind.Altar.describeLocation(_party.getTile());
     }
 
-    // Ctrl+F once the sword is claimed: where the marked party is. False when there's none.
+    // Ctrl+F once the sword is claimed: where the marked party is; with no Black Skull hunt, where
+    // The Ten are (chaos_mind/aura.nut). False when there's neither.
     function showDirection()
     {
         local target = this.getActive() != 0 ? this.getTarget() : null;
 
         if (target == null)
         {
-            ::ChaosMind.Notice.close();
-            return false;
+            return ::ChaosMind.Aura.showDirection();
         }
 
         local text = "The " + this.describeTarget(target) + ".";

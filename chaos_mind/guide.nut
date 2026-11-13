@@ -110,8 +110,8 @@
         return this.open();
     }
 
-    // The book's text. Each chapter has a title and lines: "# " starts a heading, "- " a bullet,
-    // anything else is a paragraph.
+    // The book's text. Each chapter has a title, an optional kind shown after it ("ability", "perk"...)
+    // and lines: "# " starts a heading, "- " a bullet, anything else is a paragraph.
     function getChapters()
     {
         local cs = ::ChaosMind.CarnalStorage;
@@ -122,6 +122,8 @@
 
         local blade = [
             "A legendary two-handed greatsword. It swings with Overhead Strike, Split and Swing, like any greatsword, and deals 100 to 120 base damage.",
+            "# Armor penetration",
+            "- +" + (::ChaosMind.ArmorPenetrationBonus * 100).tointeger() + "% more of each hit goes past armor straight to hitpoints than with a greatsword. The weapon's tooltip shows the total.",
             "# Damage",
             "- +0.5% damage for every point of the wielder's Melee Skill. With the Chaos Armor perk this doubles to +1% per point.",
             "- +1% damage for every 10 kills the blade has taken, with no cap.",
@@ -152,7 +154,7 @@
             blade.insert(1, "Your blade has " + sword.m.Kills + " kills: +" + sword.getKillBonus() + "% damage and +" + sword.getChampionBonus() + "% chance to draw champions.");
         }
 
-        chapters.push({ Title = "The Frozen Eye", Lines = [
+        chapters.push({ Title = "The Frozen Eye", Kind = "location", Lines = [
             "Chaos Mind is buried point-first in a mound of snow far in the frozen north: The Frozen Eye. There is one in every campaign, on snow or snowy forest, at least 6 tiles from any settlement.",
             "Press " + ::ChaosMind.getLocateKey() + " on the world map to see which way it lies and how far, until the sword is claimed.",
             "# The price",
@@ -162,16 +164,16 @@
             "- Each offered brother's gear goes to the stash, and he is recorded as fallen.",
             "- The blade starts with 8 kills, one for each of them. This guide comes with it."
         ]});
-        chapters.push({ Title = "Chaos Mind", Lines = blade });
+        chapters.push({ Title = "Chaos Mind", Kind = "weapon", Lines = blade });
         local q = ::ChaosMind.Quest;
         local skull = [
             "A three-part hunt that opens as the blade feeds. Each part must be finished before the next.",
             "# When it's offered",
             "- Part 1 at " + q.Tiers[0].Kills + " kills, part 2 at " + q.Tiers[1].Kills + ", part 3 at " + q.Tiers[2].Kills + ". The kills count is your Chaos Mind's.",
-            "- Once the blade has enough kills, the offer comes the next time the company enters a town, any town. Turn it down and it comes again from the next day on.",
+            "- Once the blade has enough kills, the next town you come to offers it as a contract, with a purple banner. Negotiate it like any other: it pays crowns on your return as well as its own reward, and while it runs it is your one active contract.",
             "# The hunt",
             "- Accepting spawns a party under a black skull banner " + q.MinSpawnDistance + " to " + q.MaxSpawnDistance + " tiles from that town, led by a champion. It's marked on the map with a ring, and other parties leave it alone.",
-            "- Part 1: " + q.Tiers[0].Name + " (brigands). Part 2: " + q.Tiers[1].Name + " (barbarians). Part 3: " + q.Tiers[2].Name + " (orcs).",
+            "- Part 1: " + q.Tiers[0].Name + " (five brigand champions). Part 2: " + q.Tiers[1].Name + " (twelve barbarian champions). Part 3: " + q.Tiers[2].Name + " (fourteen orc champions).",
             "- " + ::ChaosMind.getLocateKey() + " shows where it is.",
             "- Its leader must die to Chaos Mind: the wielder's attacks, the black cloud or the curse. Once the party is gone, the part is done if he did.",
             "- If he dies any other way (another brother, a duel won by someone else), the part fails and is offered again from the next day, with a new party.",
@@ -200,8 +202,62 @@
             skull.insert(2, "Your blade gives its wielder +" + q.getStaminaBonus(sword) + " max fatigue.");
         }
 
-        chapters.push({ Title = "The Black Skull", Lines = skull });
-        chapters.push({ Title = "Carnal Storage", Lines = [
+        chapters.push({ Title = "The Black Skull", Kind = "quest", Lines = skull });
+
+        local army = ::ChaosMind.Army;
+        local armyLines = [
+            "A three-part contract against hosts of the dead. Each part opens with the blade's kills and is offered like the Black Skull: the next town you come to has it as a contract (purple banner, white skull).",
+            "# The parts",
+            "- Part 1 at " + army.Tiers[0].Kills + " kills: " + army.Tiers[0].Count + " skeletons. Part 2 at " + army.Tiers[1].Kills + ": " + army.Tiers[1].Count + ". Part 3 at " + army.Tiers[2].Kills + ": " + army.Tiers[2].Count + ".",
+            "- The host stands in groups of " + army.GroupSize + " near the town, each a battle of its own. Destroy every group to finish, then return to the town to be paid.",
+            "- It can't fail.",
+            "# The skeletons",
+            "- Plain Ancient Auxiliaries, the weakest of the dead, with " + (army.HitpointsMult * 100).tointeger() + "% of their usual hitpoints. Never champions, not even from the blade.",
+            "- Their turns play " + army.FastSpeed.tointeger() + " times faster, so you don't wait on fifty skeletons walking one by one. Your brothers' turns run at normal speed.",
+            "- Every one the blade kills counts towards its kills."
+        ];
+        local armyActive = army.getActive();
+
+        if (armyActive != 0)
+        {
+            armyLines.insert(1, "Now fighting part " + armyActive + ": " + army.getTargets().len() + " group(s) left.");
+        }
+        else if (army.getDone() < army.Tiers.len())
+        {
+            armyLines.insert(1, "Parts done: " + army.getDone() + " of " + army.Tiers.len() + ". The next opens at " + army.Tiers[army.getDone()].Kills + " kills.");
+        }
+        else
+        {
+            armyLines.insert(1, "All three parts are done.");
+        }
+
+        chapters.push({ Title = "Army of the Past", Kind = "quest", Lines = armyLines });
+
+        local aura = ::ChaosMind.Aura;
+        local auraLines = [
+            "A hunt that opens at " + aura.AuraKills + " Chaos Mind kills. Its reward is the amulet Aura of 10.",
+            "# The hunt",
+            "- Once the blade has enough kills, the next town you come to offers it as a contract, with a purple banner. Negotiate it like any other: it pays crowns on your return as well as its own reward, and while it runs it is your one active contract.",
+            "- Accepting brings out The Ten: one party of ten named human champions, marked on the map near that town. Other parties leave it alone, and " + ::ChaosMind.getLocateKey() + " shows where it is.",
+            "- Kill all ten, any way you like. The hunt can't fail; whatever is left of them waits for you.",
+            "# Aura of 10",
+            "- An amulet for the accessory slot.",
+            "- While any brother wears it, the company counts on the world map as at least a company of ten seasoned men (strength " + aura.CompanyStrength + "). Small and weak parties won't attack you and keep away, so you skip easy fights.",
+            "- Parties strong enough to take on such a company still come for you."
+        ];
+        local auraState = aura.getState();
+
+        if (auraState == 1)
+        {
+            auraLines.insert(1, "Now hunting The Ten.");
+        }
+        else if (auraState == 2)
+        {
+            auraLines.insert(1, "The Ten are dead; the amulet is yours.");
+        }
+
+        chapters.push({ Title = "Aura of 10", Kind = "quest", Lines = auraLines });
+        chapters.push({ Title = "Carnal Storage", Kind = "ability", Lines = [
             "A skill granted by Chaos Mind. 0 AP. It opens a window where the wielder trades his own body for energy, and spends energy on damage.",
             "# Sacrifices",
             "- Fatigue: " + cs.FatiguePerEnergy + " fatigue for 1 energy.",
@@ -218,7 +274,7 @@
             "- Energy and every bonus are lost when the battle ends.",
             "- The status effect Carnal Storage shows the energy stored and the current bonus."
         ]});
-        chapters.push({ Title = "Brother Sacrifice", Lines = [
+        chapters.push({ Title = "Brother Sacrifice", Kind = "ability", Lines = [
             "A skill granted by Chaos Mind. 4 AP, 10 fatigue. Targets one adjacent brother.",
             "- He takes a full Chaos Mind strike: the weapon's damage with the Melee Skill bonus, the kill bonus and the wielder's damage bonuses. It always hits and ignores armor.",
             "- He always dies. He can't survive with a permanent injury, and Nine Lives doesn't save him.",
@@ -227,14 +283,14 @@
             "- Brothers with Chaos Protection can't be chosen.",
             "- Every other brother's mood drops, and on the field they flee in terror (see Sacrifice Terror)."
         ]});
-        chapters.push({ Title = "Mass Sacrifice", Lines = [
+        chapters.push({ Title = "Mass Sacrifice", Kind = "ability", Lines = [
             "A skill granted by Chaos Mind. 6 AP, 25 fatigue. Only usable while at least one brother stands next to the wielder.",
             "- Every brother in the 6 tiles around him takes the same strike as Brother Sacrifice, and every one of them dies.",
             "- Brothers with Chaos Protection are skipped.",
             "- All the hitpoints lost become energy (" + cs.HitpointsPerEnergy + " for 1), and every death counts as a kill for the blade.",
             "- Every other brother's mood drops, and on the field they flee in terror (see Sacrifice Terror)."
         ]});
-        chapters.push({ Title = "Sacrifice Terror", Lines = [
+        chapters.push({ Title = "Sacrifice Terror", Kind = "effect", Lines = [
             "After any Brother or Mass Sacrifice, every other brother on the field is Terrified by the Sacrifice.",
             "- He drops to Fleeing at once and can't rally until the battle ends. Rally the Troops doesn't help him.",
             "- The wielder who did it is spared, as is anyone with Only Chaos Matters or Chaos Protection.",
@@ -242,7 +298,7 @@
             "# Hatred",
             "If the wielder has Only Chaos Matters, the company hates him for it: see that perk."
         ]});
-        chapters.push({ Title = "Soul Arrow", Lines = [
+        chapters.push({ Title = "Soul Arrow", Kind = "item", Lines = [
             "The Devourer's gift. The first time any Chaos Mind the company owns reaches 100 kills, the event The Devourer's Gift puts a Soul Arrow in the stash. Once per campaign. If the stash is full, it asks you to make room and tries again the next day.",
             "# The arrow",
             "- It goes in the quiver (ammo) slot, but holds no arrows or bolts: a bow or crossbow can't shoot with it.",
@@ -254,14 +310,14 @@
             "- With less than " + sa.RefillCost + " ammo it stays empty and tries again after the next battle.",
             "- Only an arrow equipped by a brother who fought in the battle recharges, not one in the stash."
         ]});
-        chapters.push({ Title = "Armor Fixer", Lines = [
+        chapters.push({ Title = "Armor Fixer", Kind = "item", Lines = [
             "A field repair kit. Every armorer, north and south, sells up to 3.",
             "- Carried in a bag slot.",
             "- Use Armor Fixer: 3 AP, no fatigue, single use. Repairs up to " + ::ChaosMind.ArmorFixer.Repair + " armor: body armor first, the rest to the helmet. Never above maximum.",
             "- Greyed out when there's nothing to repair, so it can't be wasted.",
             "- Several in one bag give one button each."
         ]});
-        chapters.push({ Title = "Chaos Protection", Lines = [
+        chapters.push({ Title = "Chaos Protection", Kind = "perk", Lines = [
             "Perk, tier 1.",
             "- Immune to Chaos Mind's black cloud and its curse.",
             "- Can't be sacrificed: Brother Sacrifice can't target him, Mass Sacrifice skips him.",
@@ -269,7 +325,25 @@
             "- Not touched by a Chaos Circle: neither screamed at nor slowed.",
             "- The cost: -" + ::ChaosMind.ChaosProtectionResolvePenalty + " Resolve while he has the perk."
         ]});
-        chapters.push({ Title = "Only Chaos Matters", Lines = [
+        chapters.push({ Title = "Vampire Allegiance", Kind = "perk", Lines = [
+            "Perk, tier 2. Works for any brother with any weapon; Chaos Mind isn't needed.",
+            "- Every kill he makes heals him for " + ::ChaosMind.VampireAllegiance.HealPercent + "% of the victim's maximum hitpoints (at least 1).",
+            "- Example: killing a 100 hitpoint enemy heals him " + ::ChaosMind.VampireAllegiance.HealPercent + ".",
+            "- Never above his own maximum.",
+            "- Kills by the blade's black cloud and curse, and Brother or Mass Sacrifice, count too when he made them."
+        ]});
+        local ta = ::ChaosMind.TrollAllegiance;
+        local taPercent = ::Math.round((ta.RecoveryMult - 1.0) * 100);
+        chapters.push({ Title = "Troll Allegiance", Kind = "perk", Lines = [
+            "Perk, tier 3. Works for any brother; Chaos Mind isn't needed. All his recovery is +" + taPercent + "%.",
+            "# In battle",
+            "- The fatigue he recovers each turn: 15 becomes " + ::Math.round(15 * ta.RecoveryMult) + ", and bonuses from other perks are raised too.",
+            "- Healing from Vampire Allegiance.",
+            "# On the world map",
+            "- His hitpoints heal " + taPercent + "% faster.",
+            "- His injuries heal " + taPercent + "% faster, as long as the company has medicine."
+        ]});
+        chapters.push({ Title = "Only Chaos Matters", Kind = "perk", Lines = [
             "Perk, tier 3.",
             "- Immune to a Hexe's Charm and a Geist's Horrific Scream, including the scream of a Chaos Circle.",
             "- Never loses morale when an ally dies.",
@@ -280,25 +354,25 @@
             "- By 0.5 after every battle he fights in.",
             "- By 0.25 every day."
         ]});
-        chapters.push({ Title = "Used to It", Lines = [
+        chapters.push({ Title = "Used to It", Kind = "perk", Lines = [
             "Perk, tier 4. Works for any brother; Chaos Mind isn't needed.",
             "- Every attack, melee or ranged, that misses him gives +" + ut.DefensePerStack + " Melee Defense and +" + ut.DefensePerStack + " Ranged Defense until the battle ends, up to " + ut.MaxStacks + " stacks (+" + (ut.DefensePerStack * ut.MaxStacks) + ").",
             "- A new stack already counts against the very next attack.",
             "- Dodging an attack costs him no fatigue.",
             "- The status effect Used to It (+N) shows the current bonus."
         ]});
-        chapters.push({ Title = "Chaos Armor", Lines = [
+        chapters.push({ Title = "Chaos Armor", Kind = "perk", Lines = [
             "Perk, tier 5. Only works while wielding Chaos Mind.",
             "- +1 Melee Defense and +1 Ranged Defense for every +1% damage the blade has gained from kills (one per 10 kills), with no cap.",
             "- Doubles the blade's Melee Skill scaling, from +0.5% to +1% damage per point. This also strengthens Brother and Mass Sacrifice."
         ]});
-        chapters.push({ Title = "Fatigue Transfer", Lines = [
+        chapters.push({ Title = "Fatigue Transfer", Kind = "perk", Lines = [
             "Perk, tier 6. Grants the skill Fatigue Transfer.",
             "- 1 AP. Targets one adjacent enemy.",
             "- All of the user's fatigue moves onto the enemy, up to the enemy's maximum, and the user drops to 0 fatigue.",
             "- Can be used once every 3 turns. Not usable at 0 fatigue."
         ]});
-        chapters.push({ Title = "Chaos Circle", Lines = [
+        chapters.push({ Title = "Chaos Circle", Kind = "perk", Lines = [
             "Perk, tier 7. Grants the skill Chaos Circle, usable only while wielding Chaos Mind.",
             "- 6 AP, 30 fatigue, once every 3 turns.",
             "- Target any visible tile 1 to 5 tiles away. The circle covers that tile and the 6 around it.",
@@ -314,8 +388,8 @@
             "- The caster, and anyone with Chaos Protection: neither screamed at nor slowed.",
             "- Only Chaos Matters and Iron Mind shake off the scream, but are still slowed."
         ]});
-        chapters.push({ Title = "Leader Duels", Lines = [
-            "Not tied to Chaos Mind. When you engage a hostile party that has a leader, he may step forward and challenge one of your men. Each party challenges at most once.",
+        chapters.push({ Title = "Leader Duels", Kind = "event", Lines = [
+            "Not tied to Chaos Mind, and off unless switched on in Mod Settings (Chaos Mind, Gameplay): duels have crashed the game. When you engage a hostile party that has a leader, he may step forward and challenge one of your men. Each party challenges at most once.",
             "- His buff for the duel only: +20% to every combat stat for each 300 armor his whole party wears, up to +300%.",
             "- Chance of a challenge: 49% plus half his buff, up to 95%.",
             "- Pick one of up to 5 duelists (the Chaos Mind wielder first), or refuse for a normal battle.",
@@ -324,6 +398,8 @@
         ]});
         chapters.push({ Title = "Hotkeys", Lines = [
             "All of them can be changed in Mod Settings.",
+            "- Mod Settings, Chaos Mind, Leveling: perk points per level (now " + ::ChaosMind.Settings.getPerkPointsPerLevel() + "), attribute level-ups per level (now " + ::ChaosMind.Settings.getAttributeLevelUpsPerLevel() + ") and an XP multiplier (now x" + ::ChaosMind.Settings.getXPMult() + ").",
+            "- Mod Settings, Chaos Mind, Recruiting: extra recruits in every town (now " + ::ChaosMind.Settings.getExtraRecruits() + ").",
             "- " + ::ChaosMind.getGuideKey() + ": open or close this guide, on the world map or in battle.",
             "- " + ::ChaosMind.getLocateKey() + ": which way The Frozen Eye lies, on the world map, until the sword is claimed. Afterwards, where the Black Skull's marked party is while you hunt it."
         ]});

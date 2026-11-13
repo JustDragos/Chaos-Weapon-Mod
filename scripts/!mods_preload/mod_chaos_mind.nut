@@ -23,6 +23,7 @@ mod.queue(">mod_msu", function()
     );
 
     ::include("chaos_mind/common");
+    ::include("chaos_mind/settings");
     ::include("chaos_mind/cloud");
     ::include("chaos_mind/notice");
     ::include("chaos_mind/carnal_storage");
@@ -35,8 +36,14 @@ mod.queue(">mod_msu", function()
     ::include("chaos_mind/soul_arrow");
     ::include("chaos_mind/armor_fixer");
     ::include("chaos_mind/used_to_it");
+    ::include("chaos_mind/vampire_allegiance");
+    ::include("chaos_mind/troll_allegiance");
     ::include("chaos_mind/duel");
     ::include("chaos_mind/guide");
     ::include("chaos_mind/quest");
+    ::include("chaos_mind/aura");
+    ::include("chaos_mind/army");
+    ::include("chaos_mind/contracts");
+    ::include("chaos_mind/save_safety");
     ::include("chaos_mind/hooks/world_state");
 });

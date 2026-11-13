@@ -18,6 +18,8 @@ this.chaos_mind <- this.inherit("scripts/items/weapons/greatsword", {
 		this.m.Value = 40000;
 		this.m.RegularDamage = 100;
 		this.m.RegularDamageMax = 120;
+		// More of each hit goes past armor than with a greatsword (the game's tooltip shows the total).
+		this.m.DirectDamageMult += ::ChaosMind.ArmorPenetrationBonus;
 		this.updateName();
 
 		// Diagnostics: log who creates every copy (the altar, a save being loaded, or anything

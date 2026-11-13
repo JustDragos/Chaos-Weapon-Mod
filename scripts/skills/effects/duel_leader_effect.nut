@@ -10,6 +10,9 @@ this.duel_leader_effect <- this.inherit("scripts/skills/skill", {
 		this.m.Name = "Champion of His Men";
 		this.m.Icon = "skills/status_effect_14.png";
 		this.m.IconMini = "";
+		// Hidden since 13 Nov: the duel crashed right when this effect would first be shown (round
+		// start, and the leader's turn); it's the one thing a duel adds that a normal battle doesn't.
+		this.m.IsHidden = true;
 		this.m.Type = this.Const.SkillType.StatusEffect;
 		this.m.IsActive = false;
 		this.m.IsStacking = false;

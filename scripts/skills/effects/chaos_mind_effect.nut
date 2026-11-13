@@ -5,7 +5,13 @@ this.chaos_mind_effect <- this.inherit("scripts/skills/skill", {
 		MoodWarningShown = false,
 		// Hitpoints each victim had just before a Chaos Mind hit (by actor ID), so a kill can
 		// be paid out in Carnal Storage energy like a sacrifice: hitpoints lost / 4.
-		HitpointsBefore = {}
+		HitpointsBefore = {},
+		// A small camera shake on every Chaos Mind swing, hit or miss (the Lindwurm's tail uses
+		// strength 5). Once per swing: Swing and Split reach several targets.
+		ShakeStrength = 2.5,
+		ShakeDuration = 0.25,
+		ShakeCooldown = 0.4,
+		LastShakeTime = -1.0
 	},
 	function create()
 	{
@@ -60,7 +66,8 @@ this.chaos_mind_effect <- this.inherit("scripts/skills/skill", {
 
 		local chance = weapon.getChampionBonus();
 
-		if (chance <= 0 || this.isDuel())
+		// The Army of the Past's skeletons stay plain (::ChaosMind.Army).
+		if (chance <= 0 || this.isDuel() || ::ChaosMind.Army.isArmyBattle())
 		{
 			return;
 		}
@@ -232,13 +239,53 @@ this.chaos_mind_effect <- this.inherit("scripts/skills/skill", {
 		}
 	}
 
+	// Shakes the camera from the wielder towards the target, the way the game's Lindwurm tail does.
+	// Called before the hit lands (or on a miss), while the target is still alive and on the map.
+	function shake( _targetEntity )
+	{
+		if (!("ShakeWarningShown" in ::ChaosMind))
+		{
+			::ChaosMind.ShakeWarningShown <- false;
+		}
+
+		try
+		{
+			local now = ::Time.getVirtualTimeF();
+
+			if (now - this.m.LastShakeTime < this.m.ShakeCooldown || _targetEntity == null || !_targetEntity.isPlacedOnMap())
+			{
+				return;
+			}
+
+			this.m.LastShakeTime = now;
+			::Tactical.getCamera().quake(this.getContainer().getActor(), _targetEntity, this.m.ShakeStrength, 0.16, this.m.ShakeDuration);
+		}
+		catch (e)
+		{
+			if (!::ChaosMind.ShakeWarningShown)
+			{
+				::ChaosMind.ShakeWarningShown <- true;
+				::logWarning("Chaos Mind: the camera shake failed (" + e + "); attacks go on without it.");
+			}
+		}
+	}
+
 	// Remember where the target stands, since it may be dead by the time onTargetHit runs.
 	function onBeforeTargetHit( _skill, _targetEntity, _hitInfo )
 	{
 		if (this.isChaosMindAttack(_skill) && _targetEntity.isPlacedOnMap())
 		{
+			this.shake(_targetEntity);
 			this.m.TargetTile = _targetEntity.getTile();
 			this.m.HitpointsBefore[_targetEntity.getID()] <- _targetEntity.getHitpoints();
+		}
+	}
+
+	function onTargetMissed( _skill, _targetEntity )
+	{
+		if (this.isChaosMindAttack(_skill))
+		{
+			this.shake(_targetEntity);
 		}
 	}
 
