@@ -1,5 +1,4 @@
 // Hotkey notices: a small window that closes completely (MSU's popup shrinks to a badge instead).
-// Also used by Blacksmith's Workshop's Ctrl+B when this mod is installed.
 ::ChaosMind.Notice <- {
     Screen = null,
 

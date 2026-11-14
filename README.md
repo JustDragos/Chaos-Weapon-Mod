@@ -40,9 +40,11 @@
 - [The Black Skull](#the-black-skull)
 - [Army of the Past](#army-of-the-past)
 - [Aura of 10](#aura-of-10)
+- [The Red Dragon](#the-red-dragon)
 - [Leader duels](#leader-duels)
 - [Chaos Guide](#chaos-guide)
 - [Hotkeys](#hotkeys)
+- [Mod Settings](#mod-settings)
 - [Status](#status)
 
 ## Installing
@@ -58,9 +60,9 @@
 To build the zip yourself, zip the folders `brushes`, `chaos_mind`, `gfx`, `scripts` and `ui` so that they sit at the top level of the zip.
 
 > [!NOTE]
-> **Optional, off by default:** Mod Settings → Chaos Mind → Saves → *Saves load without the mod (experimental)*. With it on, saves keep the mod's items, perks and contracts as plain data so they still load if the mod is removed, and get them back when it's installed again. Before the sword is claimed, saves always need the mod.
+> **Optional, off by default:** Mod Settings → Chaos Mind → Dev / Game breaking → *Saves load without the mod (experimental)*. With it on, saves keep the mod's items, perks and contracts as plain data so they still load if the mod is removed, and get them back when it's installed again. Before the sword is claimed, saves always need the mod.
 >
-> **Leader duels are off by default** (Mod Settings → Chaos Mind → Gameplay): they have crashed the game at their first round.
+> **Leader duels and the Red Dragon are off by default** (Mod Settings → Chaos Mind → Dev / Game breaking): both are experimental and have broken battles.
 
 ## Abilities at a glance
 
@@ -251,7 +253,24 @@ While any brother wears it, the company counts on the world map as at least **a 
 
 Every hunt is a real contract, so the game's own active-contract panel shows what to do, and its targets (the Black Skull party, The Ten, each Army of the Past group) are shown on the map from the moment they spawn, through the fog of war.
 
+## The Red Dragon
+
+> [!WARNING]
+> **Experimental, off by default.** Switch it on in Mod Settings → Chaos Mind → Dev / Game breaking → *Red Dragon (experimental)*.
+
+At **750 kills** on the blade, the next town you come to offers a contract to slay **the Red Dragon**. It fills **seven hexes**: its body in the middle, its head in front, its tail behind and two wings on each side. Hit any of them; they share one pool of 2000 health.
+
+- It starts the battle in the air and **lands** near your company, throwing everyone next to it back a hex.
+- It **breathes fire** on everything up to three hexes in front of its head, and the ground keeps burning for two rounds.
+- Every third turn it **roars**, and every brother nearby checks morale.
+- Every fourth turn, and when its health first falls below two thirds and one third, it **takes to the sky**: for one turn it can't be seen or hurt, then it lands somewhere else.
+
+Its hoard and scales go to whoever slays it. With the setting on, **Ctrl+Shift+D** spawns one in any battle to try the fight.
+
 ## Leader duels
+
+> [!WARNING]
+> **Experimental, off by default.** Switch them on in Mod Settings → Chaos Mind → Dev / Game breaking → *Leader duels (experimental)*.
 
 Not tied to Chaos Mind. When you engage a hostile party that has a leader, he may step out and demand single combat. Each party asks at most once.
 
@@ -281,12 +300,23 @@ A book with the full explanation of every item, skill and perk above, so the too
 |---|---|---|
 | **Ctrl+F** | World map | Where The Frozen Eye is; once the sword is claimed, where the Black Skull's marked party is |
 | **Ctrl+G** | World map, battle | Open or close the Chaos Guide |
+| **Ctrl+B** | World map | *Experimental:* where every boss is, nearest first: the game's legendary locations and this mod's running hunts |
+| **Ctrl+Shift+D** | Battle | *Experimental:* spawn a Red Dragon to test it (only with the Red Dragon setting on) |
 
 All of them can be changed in Mod Settings.
 
 ## Mod Settings
 
-**Mod Settings → Chaos Mind → Leveling:**
+Two pages, plus the keybinds.
+
+**Gameplay:**
+
+| Setting | Range | Default | What it does |
+|---|---|---|---|
+| Hidden enemy turn speed | ×1–×30 | **×25** | An enemy out of sight when its turn starts plays that whole turn this much faster. ×1 is the normal game |
+| Normal enemy turn speed | ×1–×30 | ×1 | The same for enemies you can see. Your brothers and allies always play at normal speed |
+
+**Dev / Game breaking**, Leveling:
 
 | Setting | Range | Default | Normal game |
 |---|---|---|---|
@@ -304,11 +334,16 @@ Extra attribute rounds get their own rolled values, so talents still count. Brot
   <em>A new Lone Wolf with perk points per level at 10 and attribute level-ups at 5: 30 perk points to spend at the start.</em>
 </p>
 
-**Mod Settings → Chaos Mind → Recruiting:** *Extra recruits per town*, 0–20, default **12** (0 is the normal game). Every town offers that many more recruits each time its recruits refresh; changing it in a campaign refreshes them at once.
+**Dev / Game breaking**, Recruiting:
+
+- *Extra recruits per town*, 0–20, default **12** (0 is the normal game). Every town offers that many more recruits each time its recruits refresh; changing it in a campaign refreshes them at once.
+- *Max hiring cost*, 0–3000 crowns, default **0** (no cap). No recruit costs more than this to hire; wages and the tryout fee don't change.
+
+**Dev / Game breaking**, Extra content and Experimental: *Red Dragon*, *Leader duels* and *Saves load without the mod*, all off by default.
 
 ## Status
 
-Built and tested piece by piece. A few features haven't been tried in play yet: the leader duel since its last fix, Chaos Circle's resolve-gap scream, and parts 2 and 3 of the Black Skull. The game's own scripts are encrypted, so some names had to be guessed. Every guessed name is guarded: a wrong one logs a warning in `log.html` instead of crashing.
+Built and tested piece by piece. The Red Dragon, leader duels and the Ctrl+B boss list are experimental: they have broken battles, so the dragon and duels are off by default. A few features haven't been tried in play yet: Chaos Circle's resolve-gap scream and parts 2 and 3 of the Black Skull. The game's own scripts are encrypted, so some names had to be guessed. Every guessed name is guarded: a wrong one logs a warning in `log.html` instead of crashing.
 
 ## Art
 

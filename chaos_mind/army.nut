@@ -7,8 +7,8 @@
 //    in the same battle. The part is done once every group is gone.
 //  - The skeletons are Ancient Auxiliaries (the weakest), never champions (the blade's champion
 //    roll is skipped in these battles) and frailer than usual (army_of_the_past_effect). Their
-//    turns run FastSpeed times faster, so their moves play almost at once; the brothers' turns run
-//    at normal speed.
+//    turns run at the hidden enemy speed (default 25x) even in sight, so their moves play almost at
+//    once; the brothers' turns run at normal speed.
 ::ChaosMind.Army <- {
     PartyFlag = "ChaosMind.ArmyParty",
     DoneFlag = "ChaosMind.ArmyDone",
@@ -22,8 +22,8 @@
     MinGroupDistance = 5,
     // The skeletons' hitpoints are multiplied by this.
     HitpointsMult = 0.5,
-    // Game speed during the skeletons' turns (1.0 is normal).
-    FastSpeed = 6.0,
+    // Game speed during the skeletons' turns: since 14 Nov the hidden enemy speed setting
+    // (::ChaosMind.Settings.getHiddenEnemySpeed, default 25), in sight or not.
 
     // Count: skeletons in all. Pay and DifficultyMult: the contract's crowns before haggling, and
     // its skulls in town.
@@ -35,7 +35,6 @@
 
     Town = null,
     LastHourChecked = -1,
-    SpeedWarningShown = false,
 
     function getDone()
     {
@@ -321,29 +320,12 @@
         return false;
     }
 
-    // Normal speed for the brothers' turns, FastSpeed for the skeletons'.
-    function setFast( _fast )
+    // A skeleton of this battle's group? Its turns run at the hidden enemy speed, in sight or not
+    // (chaos_mind/fast_turns.nut sets the speed for every unit's turn since 14 Nov).
+    function isSkeleton( _actor )
     {
-        try
-        {
-            ::Time.setVirtualSpeed(_fast ? this.FastSpeed : 1.0);
-        }
-        catch (e)
-        {
-            if (!this.SpeedWarningShown)
-            {
-                this.SpeedWarningShown = true;
-                ::logWarning("Chaos Mind: the Army of the Past's turns could not be sped up (" + e + ").");
-            }
-        }
-
-        try
-        {
-            ::Settings.getTempGameplaySettings().FasterAIMovement = _fast;
-        }
-        catch (e)
-        {
-        }
+        local effect = _actor.getSkills().getSkillByID("effects.army_of_the_past");
+        return effect != null && effect.m.IsSkeleton;
     }
 
     // After the battle's units are placed: the skeletons get frailer and fast, the brothers keep

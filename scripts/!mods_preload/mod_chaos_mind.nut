@@ -1,6 +1,6 @@
 ::ChaosMind <- {
     ID = "mod_chaos_mind",
-    Version = "1.0.0",
+    Version = "1.0.1",
     Name = "Chaos Mind"
 };
 
@@ -43,7 +43,10 @@ mod.queue(">mod_msu", function()
     ::include("chaos_mind/quest");
     ::include("chaos_mind/aura");
     ::include("chaos_mind/army");
+    ::include("chaos_mind/fast_turns");
+    ::include("chaos_mind/dragon");
     ::include("chaos_mind/contracts");
+    ::include("chaos_mind/bosses");
     ::include("chaos_mind/save_safety");
     ::include("chaos_mind/hooks/world_state");
 });

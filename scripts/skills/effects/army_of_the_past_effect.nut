@@ -1,7 +1,7 @@
 // Army of the Past battles only (::ChaosMind.Army.onBattleSpawned), on every unit:
-//  - a skeleton is frailer (hitpoints x Army.HitpointsMult) and its turns run at Army.FastSpeed;
+//  - a skeleton is frailer (hitpoints x Army.HitpointsMult) and its turns run at the hidden enemy speed (fast_turns.nut);
 //  - a brother's turns run at normal speed.
-// Hidden, not saved, gone after the battle; the speed is put back to normal when it ends.
+// Hidden, not saved, gone after the battle; chaos_mind/fast_turns.nut puts the speed back when it ends.
 this.army_of_the_past_effect <- this.inherit("scripts/skills/skill", {
 	m = {
 		IsSkeleton = false
@@ -39,13 +39,5 @@ this.army_of_the_past_effect <- this.inherit("scripts/skills/skill", {
 		}
 	}
 
-	function onTurnStart()
-	{
-		::ChaosMind.Army.setFast(this.m.IsSkeleton);
-	}
-
-	function onCombatFinished()
-	{
-		::ChaosMind.Army.setFast(false);
-	}
+	// The turn speed itself is set by chaos_mind/fast_turns.nut (14 Nov), which reads IsSkeleton.
 });

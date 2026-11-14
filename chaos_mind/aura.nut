@@ -306,8 +306,7 @@
 
         if (target == null)
         {
-            ::ChaosMind.Notice.close();
-            return false;
+            return ::ChaosMind.Dragon.showDirection();
         }
 
         local text = "The Ten are " + ::ChaosMind.Altar.describeLocation(target.getTile()) + ".";

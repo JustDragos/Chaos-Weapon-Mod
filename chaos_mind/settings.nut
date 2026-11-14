@@ -1,4 +1,5 @@
-// Mod Settings -> Chaos Mind -> Leveling (MSU; saved with MSU's own settings). Added 13 Nov.
+// Mod Settings -> Chaos Mind -> Dev / Game breaking -> Leveling (MSU; saved with MSU's own
+// settings). Added 13 Nov; moved from its own Leveling page 14 Nov.
 //  - Perk points per level: every perk point the game gives on a level-up is multiplied by this
 //    (player.updateLevel). Levels that give none, such as the veteran levels, stay at none.
 //  - Attribute level-ups per level: every level-up's round of raising three attributes is
@@ -17,14 +18,36 @@
     ExtraRecruits = null,
     SaveSafety = null,
     Duels = null,
+    HiddenEnemySpeed = null,
+    NormalEnemySpeed = null,
+    RedDragon = null,
 
-    // Mod Settings -> Chaos Mind -> Gameplay: leader duels (chaos_mind/duel.nut), off by default.
+    // Mod Settings -> Chaos Mind -> Dev / Game breaking: the Red Dragon contract and test key.
+    function isRedDragonOn()
+    {
+        return this.RedDragon != null && this.RedDragon.getValue() == true;
+    }
+
+    // Mod Settings -> Chaos Mind -> Gameplay: game speed for enemy turns that start in sight.
+    function getNormalEnemySpeed()
+    {
+        return this.NormalEnemySpeed != null ? this.NormalEnemySpeed.getValue().tofloat() : 1.0;
+    }
+
+    // Mod Settings -> Chaos Mind -> Gameplay: game speed for enemy turns that start out of sight
+    // (chaos_mind/fast_turns.nut). 1 is the normal game.
+    function getHiddenEnemySpeed()
+    {
+        return this.HiddenEnemySpeed != null ? this.HiddenEnemySpeed.getValue().tofloat() : 25.0;
+    }
+
+    // Mod Settings -> Chaos Mind -> Dev / Game breaking: leader duels (chaos_mind/duel.nut), off by default.
     function areDuelsOn()
     {
         return this.Duels != null && this.Duels.getValue() == true;
     }
 
-    // Mod Settings -> Chaos Mind -> Saves: chaos_mind/save_safety.nut, off unless switched on.
+    // Mod Settings -> Chaos Mind -> Dev / Game breaking: chaos_mind/save_safety.nut, off unless switched on.
     function isSaveSafetyOn()
     {
         return this.SaveSafety != null && this.SaveSafety.getValue() == true;
@@ -33,6 +56,16 @@
     function getExtraRecruits()
     {
         return this.ExtraRecruits != null ? this.ExtraRecruits.getValue().tointeger() : 0;
+    }
+
+    // Mod Settings -> Dev / Game breaking -> Recruiting: the most a recruit costs to hire, in
+    // crowns; 0 is no cap (the default).
+    MaxHiringCost = null,
+    HiringCapLogged = false,
+
+    function getMaxHiringCost()
+    {
+        return this.MaxHiringCost != null ? this.MaxHiringCost.getValue().tointeger() : 0;
     }
 
     // Changed in a running campaign: every town refreshes its recruits at once. Not while a save
@@ -128,7 +161,14 @@
     }
 };
 
-local page = ::ChaosMind.Mod.ModSettings.addPage("Leveling");
+// Pages (14 Nov, "put features that modify the game experience like additional recruits per town,
+// red dragon, etc into dev/game breaking category"):
+//  - Gameplay: the turn-speed sliders (they change pacing, not balance).
+//  - Dev / Game breaking: leveling, extra recruits, the Red Dragon, leader duels, save safety.
+// Setting IDs are unchanged, so values already saved (MSU stores them by ID, per save) carry over.
+local gameplay = ::ChaosMind.Mod.ModSettings.addPage("Gameplay");
+local page = ::ChaosMind.Mod.ModSettings.addPage("DevGameBreaking", "Dev / Game breaking");
+page.addTitle("LevelingTitle", "Leveling");
 ::ChaosMind.Settings.PerkPoints = page.addRangeSetting("PerkPointsPerLevel", 1, 1, 10, 1, "Perk points per level",
     "How many perk points a brother gets for each level that gives one. 1 is the normal game. Levels without a perk point stay without.");
 // Defaults to 2 (13 Nov, asked for so new runs start with it); MSU keeps each save's own value.
@@ -137,22 +177,40 @@ local page = ::ChaosMind.Mod.ModSettings.addPage("Leveling");
 ::ChaosMind.Settings.XPMult = page.addRangeSetting("XPMultiplier", 1.0, 0.5, 20.0, 0.5, "XP multiplier",
     "All experience brothers gain is multiplied by this. 1 is the normal game; raise it to level brothers quickly, e.g. for testing.");
 
-// Mod Settings -> Chaos Mind -> Recruiting (13 Nov). Defaults to 12, asked for as "12 more recruits
-// every town"; MSU keeps each save's own value.
-local recruiting = ::ChaosMind.Mod.ModSettings.addPage("Recruiting");
-::ChaosMind.Settings.ExtraRecruits = recruiting.addRangeSetting("ExtraRecruits", 12, 0, 20, 1, "Extra recruits per town",
+// Recruiting (13 Nov). Defaults to 12, asked for as "12 more recruits every town"; MSU keeps each
+// save's own value.
+page.addTitle("RecruitingTitle", "Recruiting");
+::ChaosMind.Settings.ExtraRecruits = page.addRangeSetting("ExtraRecruits", 12, 0, 20, 1, "Extra recruits per town",
     "Every town offers this many more recruits each time its recruits refresh (every few days). 0 is the normal game. Changing it in a campaign refreshes every town's recruits at once.");
+// 14 Nov, asked for as "a max buy out cost option. A trackbar, default is not capped and I could
+// cap it at let's say 70 gold or 200". 0 = no cap. Only the price to hire; wages and the tryout fee
+// are unchanged.
+::ChaosMind.Settings.MaxHiringCost = page.addRangeSetting("MaxHiringCost", 0, 0, 3000, 10, "Max hiring cost (0 = no cap)",
+    "No recruit costs more than this many crowns to hire. 0 (the default) leaves prices as they are. Their daily wage and the tryout fee don't change.");
 
-// Mod Settings -> Chaos Mind -> Gameplay (13 Nov, evening): leader duels, off by default because
-// every duel crashed at round start ("Class/Structure with key "" is not registered").
-local gameplay = ::ChaosMind.Mod.ModSettings.addPage("Gameplay");
-::ChaosMind.Settings.Duels = gameplay.addBooleanSetting("LeaderDuels", false, "Leader duels (experimental)",
+// Red Dragon (14 Nov): the contract at 750 kills and the Ctrl+Shift+D battle test. Off by default
+// since v1.0.1 (on your "Confirmed game breaking" list); a dragon hunt already accepted runs on
+// either way. MSU keeps each save's own value, so saves that had it on keep it on.
+page.addTitle("ContentTitle", "Extra content");
+::ChaosMind.Settings.RedDragon = page.addBooleanSetting("RedDragon", false, "Red Dragon (experimental)",
+    "A seven-hex dragon boss: towns offer a contract to slay it once Chaos Mind has 750 kills, and Ctrl+Shift+D spawns one in any battle for testing. Off by default: it's experimental and can break battles. Off: no new dragon contracts and the test key does nothing; a dragon hunt already accepted goes on.");
+
+// Leader duels (13 Nov, evening), off by default because every duel crashed at round start
+// ("Class/Structure with key "" is not registered").
+page.addTitle("ExperimentalTitle", "Experimental");
+::ChaosMind.Settings.Duels = page.addBooleanSetting("LeaderDuels", false, "Leader duels (experimental)",
     "When you engage a party with a leader, he may challenge one of your men to a duel first. Off by default: duels have crashed the game at their first round. Turn on only to test them.");
+// 14 Nov, asked for as "20-30x": enemies out of sight when their turn starts play it this fast.
+::ChaosMind.Settings.HiddenEnemySpeed = gameplay.addRangeSetting("HiddenEnemySpeed", 25, 1, 30, 1, "Hidden enemy turn speed",
+    "In every battle, an enemy that is out of sight when its turn starts plays that whole turn this many times faster, even if it walks into view and attacks. 1 is the normal game. Enemies in sight play at the normal enemy turn speed; your brothers at normal speed.");
+// 14 Nov: the same for enemies in sight when their turn starts. Army of the Past skeletons use the
+// hidden speed either way.
+::ChaosMind.Settings.NormalEnemySpeed = gameplay.addRangeSetting("NormalEnemySpeed", 1, 1, 30, 1, "Normal enemy turn speed",
+    "In every battle, an enemy you can see when its turn starts plays that whole turn this many times faster. 1 (the default) is the normal game. Your brothers and allies always play at normal speed; Army of the Past skeletons use the hidden enemy turn speed.");
 
-// Mod Settings -> Chaos Mind -> Saves (13 Nov, evening): saves that load without the mod, off by
-// default after its first version corrupted a save (chaos_mind/save_safety.nut).
-local saves = ::ChaosMind.Mod.ModSettings.addPage("Saves");
-::ChaosMind.Settings.SaveSafety = saves.addBooleanSetting("SaveSafety", false, "Saves load without the mod (experimental)",
+// Saves that load without the mod (13 Nov, evening), off by default after its first version
+// corrupted a save (chaos_mind/save_safety.nut).
+::ChaosMind.Settings.SaveSafety = page.addBooleanSetting("SaveSafety", false, "Saves load without the mod (experimental)",
     "When saving, keep this mod's items, perks and contracts as plain data so the save still loads if the mod is removed; they come back when it's installed again. Off by default: its first version corrupted a save. Before the sword is claimed, saves always need the mod.");
 
 try
@@ -217,6 +275,36 @@ catch (e)
 
 ::ChaosMind.HooksMod.hook("scripts/entity/tactical/player", function(q)
 {
+    // Max hiring cost: the hire screen shows and charges getHiringCost(), so capping its result
+    // covers both. Name from memory of vanilla player.nut (encrypted); guarded.
+    if (q.contains("getHiringCost", true))
+    {
+        q.getHiringCost = @(__original) function( ... )
+        {
+            local args = [ this ];
+            args.extend(vargv);
+            local cost = __original.acall(args);
+            local cap = ::ChaosMind.Settings.getMaxHiringCost();
+
+            if (cap > 0 && cost > cap)
+            {
+                if (!::ChaosMind.Settings.HiringCapLogged)
+                {
+                    ::ChaosMind.Settings.HiringCapLogged = true;
+                    ::logInfo("Chaos Mind: hiring cost capped at " + cap + " crowns (" + this.getName() + " would cost " + cost + ").");
+                }
+
+                return cap;
+            }
+
+            return cost;
+        }
+    }
+    else
+    {
+        ::logWarning("Chaos Mind: player has no getHiringCost; the max hiring cost setting is off.");
+    }
+
     if (q.contains("updateLevel", true))
     {
         q.updateLevel = @(__original) function( ... )

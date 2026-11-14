@@ -213,7 +213,7 @@
             "- It can't fail.",
             "# The skeletons",
             "- Plain Ancient Auxiliaries, the weakest of the dead, with " + (army.HitpointsMult * 100).tointeger() + "% of their usual hitpoints. Never champions, not even from the blade.",
-            "- Their turns play " + army.FastSpeed.tointeger() + " times faster, so you don't wait on fifty skeletons walking one by one. Your brothers' turns run at normal speed.",
+            "- Their turns play " + ::ChaosMind.Settings.getHiddenEnemySpeed().tointeger() + " times faster (the hidden enemy turn speed in Mod Settings), even in sight, so you don't wait on fifty skeletons walking one by one. Your brothers' turns run at normal speed.",
             "- Every one the blade kills counts towards its kills."
         ];
         local armyActive = army.getActive();
@@ -257,6 +257,35 @@
         }
 
         chapters.push({ Title = "Aura of 10", Kind = "quest", Lines = auraLines });
+
+
+        local dragon = ::ChaosMind.Dragon;
+
+        local dragonLines = [
+
+            "A contract that opens at " + dragon.Kills + " Chaos Mind kills: the next town you come to has it, with a purple banner. Slay the dragon, then return to be paid. It can't fail.",
+
+            "# The dragon",
+
+            "- It fills seven hexes: its body in the middle, its head in front, its tail behind and two wings on each side. Strike any of them: they share one pool of " + ::Const.Tactical.Actor.ChaosMindRedDragon.Hitpoints + " health.",
+
+            "- It starts every battle in the air and lands on its first turn, near your company. Everyone next to where it lands is thrown back a hex.",
+
+            "- Every " + dragon.FlyEvery + "th turn, and when it first drops below two thirds and one third of its health, it takes to the sky: for a turn it can't be seen or hurt, then it lands again somewhere else.",
+
+            "- It breathes fire on everything up to " + dragon.BreathRange + " hexes in front of its head, and the ground burns for " + dragon.BreathRounds + " rounds. Stay beside it or behind it.",
+
+            "- Every " + dragon.RoarEvery + "rd turn it roars: every brother within " + dragon.RoarRange + " hexes checks morale, twice if close.",
+
+            "- Its hoard and scales go to the company that slays it."
+
+        ];
+
+        local dragonState = dragon.getState();
+
+        dragonLines.insert(1, dragonState == 2 ? "The Red Dragon is slain." : dragonState == 1 ? "The hunt is on." : !::ChaosMind.Settings.isRedDragonOn() ? "Switched off in Mod Settings (Dev / Game breaking)." : "Not yet offered.");
+
+        chapters.push({ Title = "The Red Dragon", Kind = "quest", Lines = dragonLines });
         chapters.push({ Title = "Carnal Storage", Kind = "ability", Lines = [
             "A skill granted by Chaos Mind. 0 AP. It opens a window where the wielder trades his own body for energy, and spends energy on damage.",
             "# Sacrifices",
@@ -389,7 +418,7 @@
             "- Only Chaos Matters and Iron Mind shake off the scream, but are still slowed."
         ]});
         chapters.push({ Title = "Leader Duels", Kind = "event", Lines = [
-            "Not tied to Chaos Mind, and off unless switched on in Mod Settings (Chaos Mind, Gameplay): duels have crashed the game. When you engage a hostile party that has a leader, he may step forward and challenge one of your men. Each party challenges at most once.",
+            "Not tied to Chaos Mind, and off unless switched on in Mod Settings (Chaos Mind, Dev / Game breaking): duels have crashed the game. When you engage a hostile party that has a leader, he may step forward and challenge one of your men. Each party challenges at most once.",
             "- His buff for the duel only: +20% to every combat stat for each 300 armor his whole party wears, up to +300%.",
             "- Chance of a challenge: 49% plus half his buff, up to 95%.",
             "- Pick one of up to 5 duelists (the Chaos Mind wielder first), or refuse for a normal battle.",
@@ -398,9 +427,12 @@
         ]});
         chapters.push({ Title = "Hotkeys", Lines = [
             "All of them can be changed in Mod Settings.",
-            "- Mod Settings, Chaos Mind, Leveling: perk points per level (now " + ::ChaosMind.Settings.getPerkPointsPerLevel() + "), attribute level-ups per level (now " + ::ChaosMind.Settings.getAttributeLevelUpsPerLevel() + ") and an XP multiplier (now x" + ::ChaosMind.Settings.getXPMult() + ").",
-            "- Mod Settings, Chaos Mind, Recruiting: extra recruits in every town (now " + ::ChaosMind.Settings.getExtraRecruits() + ").",
+            "- Mod Settings, Chaos Mind, Dev / Game breaking: perk points per level (now " + ::ChaosMind.Settings.getPerkPointsPerLevel() + "), attribute level-ups per level (now " + ::ChaosMind.Settings.getAttributeLevelUpsPerLevel() + ") and an XP multiplier (now x" + ::ChaosMind.Settings.getXPMult() + ").",
+            "- Mod Settings, Chaos Mind, Dev / Game breaking: extra recruits in every town (now " + ::ChaosMind.Settings.getExtraRecruits() + "), a max hiring cost (now " + (::ChaosMind.Settings.getMaxHiringCost() > 0 ? ::ChaosMind.Settings.getMaxHiringCost() + " crowns" : "no cap") + "), the Red Dragon (now " + (::ChaosMind.Settings.isRedDragonOn() ? "on" : "off") + "), leader duels and saves without the mod (both experimental).",
+            "- Mod Settings, Chaos Mind, Gameplay: hidden enemy turn speed (now x" + ::ChaosMind.Settings.getHiddenEnemySpeed().tointeger() + "). In every battle, an enemy out of sight when its turn starts plays the whole turn that much faster; 1 turns it off.",
+            "- Mod Settings, Chaos Mind, Gameplay: normal enemy turn speed (now x" + ::ChaosMind.Settings.getNormalEnemySpeed().tointeger() + "). The same for enemies you can see when their turn starts; 1 is the normal game.",
             "- " + ::ChaosMind.getGuideKey() + ": open or close this guide, on the world map or in battle.",
+            "- " + ::ChaosMind.getHotkey("showBosses", "Ctrl+B") + ": on the world map, where every boss is, nearest first: the game's legendary locations (also ones not found yet) and this mod's hunts while they run.",
             "- " + ::ChaosMind.getLocateKey() + ": which way The Frozen Eye lies, on the world map, until the sword is claimed. Afterwards, where the Black Skull's marked party is while you hunt it."
         ]});
 

@@ -158,7 +158,7 @@
     function challenge( _isPlayerInitiated, _pos )
     {
         // Off by default since 13 Nov: every duel still crashed at round start after three fixes
-        // (Mod Settings -> Chaos Mind -> Gameplay -> Leader duels).
+        // (Mod Settings -> Chaos Mind -> Dev / Game breaking -> Leader duels).
         if (!::ChaosMind.Settings.areDuelsOn())
         {
             return false;

@@ -16,7 +16,8 @@
     Types = {
         BlackSkull = { Type = "contract.chaos_mind_black_skull", Script = "scripts/contracts/contracts/chaos_mind_black_skull_contract", Icon = "ui/chaos_mind/town_quest" },
         Aura = { Type = "contract.chaos_mind_aura", Script = "scripts/contracts/contracts/chaos_mind_aura_contract", Icon = "ui/chaos_mind/town_quest" },
-        Army = { Type = "contract.chaos_mind_army", Script = "scripts/contracts/contracts/chaos_mind_army_contract", Icon = "ui/chaos_mind/army_quest" }
+        Army = { Type = "contract.chaos_mind_army", Script = "scripts/contracts/contracts/chaos_mind_army_contract", Icon = "ui/chaos_mind/army_quest" },
+        Dragon = { Type = "contract.chaos_mind_dragon", Script = "scripts/contracts/contracts/chaos_mind_dragon_contract", Icon = "ui/chaos_mind/town_quest" }
     },
     ActiveFlag = "ChaosMind.Saved.Contract",
     IconScreen = null,
@@ -84,6 +85,11 @@
         if (_key == "Army")
         {
             return ::ChaosMind.Army.isOpen();
+        }
+
+        if (_key == "Dragon")
+        {
+            return ::ChaosMind.Dragon.isOpen();
         }
 
         return ::ChaosMind.Aura.isOpen();
@@ -157,6 +163,14 @@
                 why = done >= a.Tiers.len() ? "all parts done"
                     : day <= q.getFlag(a.DeclinedDayFlag) ? "declined or failed, back after day " + q.getFlag(a.DeclinedDayFlag)
                     : "part " + (done + 1) + " needs " + a.Tiers[done].Kills + " kills";
+            }
+            else if (key == "Dragon")
+            {
+                local a = ::ChaosMind.Dragon;
+                why = !::ChaosMind.Settings.isRedDragonOn() ? "switched off in Mod Settings"
+                    : a.getState() != 0 ? "already slain or hunted (state " + a.getState() + ")"
+                    : day <= q.getFlag(a.DeclinedDayFlag) ? "declined, back after day " + q.getFlag(a.DeclinedDayFlag)
+                    : "needs " + a.Kills + " kills";
             }
             else
             {
@@ -236,6 +250,11 @@
             return ::ChaosMind.Army.getActive() != 0;
         }
 
+        if (_key == "Dragon")
+        {
+            return ::ChaosMind.Dragon.getState() == 1;
+        }
+
         return ::ChaosMind.Aura.getState() == 1;
     }
 
@@ -246,7 +265,7 @@
             return ::ChaosMind.Army.getTargets();
         }
 
-        local party = _key == "BlackSkull" ? ::ChaosMind.Quest.getTarget() : ::ChaosMind.Aura.getTarget();
+        local party = _key == "BlackSkull" ? ::ChaosMind.Quest.getTarget() : (_key == "Dragon" ? ::ChaosMind.Dragon.getTarget() : ::ChaosMind.Aura.getTarget());
         return party != null ? [ party ] : [];
     }
 
@@ -284,6 +303,10 @@
         else if (_key == "Army")
         {
             ::ChaosMind.Army.clearHunt();
+        }
+        else if (_key == "Dragon")
+        {
+            ::ChaosMind.Dragon.clearHunt();
         }
         else
         {

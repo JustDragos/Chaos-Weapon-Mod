@@ -1,5 +1,5 @@
 // Saves that still load after the mod is removed (13 Nov). OFF by default since the evening of
-// 13 Nov (Mod Settings -> Chaos Mind -> Saves): its first version also took The Frozen Eye off the
+// 13 Nov (Mod Settings -> Chaos Mind -> Saves; Dev / Game breaking since 14 Nov): its first version also took The Frozen Eye off the
 // map during the save, which corrupted a save ("Corrupt data before FoW"). That part is gone; the
 // rest stays opt-in until it is proven in play. Loading always brings back what an earlier save
 // kept in flags.

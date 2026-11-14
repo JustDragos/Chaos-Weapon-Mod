@@ -11,7 +11,9 @@ this.chaos_mind_effect <- this.inherit("scripts/skills/skill", {
 		ShakeStrength = 2.5,
 		ShakeDuration = 0.25,
 		ShakeCooldown = 0.4,
-		LastShakeTime = -1.0
+		LastShakeTime = -1.0,
+		// Off the wielder's turn the black cloud lands this many ms (game time) after the hit.
+		CloudDelay = 300
 	},
 	function create()
 	{
@@ -362,9 +364,72 @@ this.chaos_mind_effect <- this.inherit("scripts/skills/skill", {
 			}
 		}
 
-		foreach (v in victims)
+		if (victims.len() == 0)
 		{
-			if (!v.Actor.isAlive() || v.Actor.isDying())
+			return;
+		}
+
+		// Soft-lock fix (14 Nov): a hit outside the wielder's own turn (a free attack on an enemy
+		// walking away) can kill the unit whose turn it is. The game then hands the turn to the next
+		// unit in the same call; if the cloud killed that unit right there too, the turn bar kept a
+		// dead unit as next ("Failed to query entity data", nothing moves). So off his turn the cloud
+		// lands a moment later, once the game has finished the death and picked who acts next.
+		if (this.isWieldersTurn(user))
+		{
+			this.applyCloud(user, victims);
+			return;
+		}
+
+		local self = this;
+
+		try
+		{
+			::Time.scheduleEvent(::TimeUnit.Virtual, this.m.CloudDelay, function( _data )
+			{
+				try
+				{
+					self.applyCloud(user, victims);
+				}
+				catch (e)
+				{
+					::logWarning("Chaos Mind: the delayed black cloud failed (" + e + ").");
+				}
+			}, null);
+		}
+		catch (e)
+		{
+			::logWarning("Chaos Mind: the black cloud could not be delayed (" + e + "); it lands at once.");
+			this.applyCloud(user, victims);
+		}
+	}
+
+	// Is it the wielder's own turn? If the game can't tell, treat it as not (the delayed cloud
+	// is the safe one).
+	function isWieldersTurn( _user )
+	{
+		try
+		{
+			local active = ::Tactical.TurnSequenceBar.getActiveEntity();
+			return active != null && active.getID() == _user.getID();
+		}
+		catch (e)
+		{
+			return false;
+		}
+	}
+
+	// Damage for the black cloud and the curse. Skips anyone who died, left the map or turned
+	// protected meanwhile; does nothing if the wielder is gone or the battle is over.
+	function applyCloud( _user, _victims )
+	{
+		if (!::Tactical.isActive() || _user == null || !_user.isAlive() || !_user.isPlacedOnMap())
+		{
+			return;
+		}
+
+		foreach (v in _victims)
+		{
+			if (!v.Actor.isAlive() || v.Actor.isDying() || !v.Actor.isPlacedOnMap())
 			{
 				continue;
 			}
@@ -378,7 +443,7 @@ this.chaos_mind_effect <- this.inherit("scripts/skills/skill", {
 			hitInfo.BodyPart = this.Const.BodyPart.Body;
 			hitInfo.BodyDamageMult = 1.0;
 			hitInfo.FatalityChanceMult = 0.0;
-			v.Actor.onDamageReceived(user, this, hitInfo);
+			v.Actor.onDamageReceived(_user, this, hitInfo);
 		}
 	}
 
