@@ -18,11 +18,11 @@
 </p>
 
 <p align="center">
-  <a href="https://youtu.be/SFaV3NMPQ54">
-    <img src="https://img.youtube.com/vi/SFaV3NMPQ54/maxresdefault.jpg" width="720" alt="Watch the Chaos Mind demo on YouTube">
+  <a href="https://youtu.be/X89l6bGgo6Y">
+    <img src="https://img.youtube.com/vi/X89l6bGgo6Y/maxresdefault.jpg" width="720" alt="Watch the Chaos Mind demo on YouTube">
   </a>
   <br>
-  <a href="https://youtu.be/SFaV3NMPQ54"><b>Watch the demo on YouTube</b></a> (8 min)
+  <a href="https://youtu.be/X89l6bGgo6Y"><b>Watch the demo on YouTube</b></a> (9 min)
 </p>
 
 ---
