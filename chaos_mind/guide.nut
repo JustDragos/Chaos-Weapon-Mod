@@ -432,6 +432,7 @@
             "- Mod Settings, Chaos Mind, Gameplay: hidden enemy turn speed (now x" + ::ChaosMind.Settings.getHiddenEnemySpeed().tointeger() + "). In every battle, an enemy out of sight when its turn starts plays the whole turn that much faster; 1 turns it off.",
             "- Mod Settings, Chaos Mind, Gameplay: normal enemy turn speed (now x" + ::ChaosMind.Settings.getNormalEnemySpeed().tointeger() + "). The same for enemies you can see when their turn starts; 1 is the normal game.",
             "- " + ::ChaosMind.getGuideKey() + ": open or close this guide, on the world map or in battle.",
+            "- " + ::ChaosMind.getHotkey("redDragonKey", "Ctrl+D") + " (experimental): on the world map a Red Dragon lands beside your company and attacks it; in battle one joins the fight.",
             "- " + ::ChaosMind.getHotkey("showBosses", "Ctrl+B") + ": on the world map, where every boss is, nearest first: the game's legendary locations (also ones not found yet) and this mod's hunts while they run.",
             "- " + ::ChaosMind.getLocateKey() + ": which way The Frozen Eye lies, on the world map, until the sword is claimed. Afterwards, where the Black Skull's marked party is while you hunt it."
         ]});

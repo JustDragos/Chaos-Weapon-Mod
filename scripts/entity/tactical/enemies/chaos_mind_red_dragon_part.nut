@@ -10,7 +10,10 @@ this.chaos_mind_red_dragon_part <- this.inherit("scripts/entity/tactical/actor",
 
 	function hasBody()
 	{
-		return this.m.Body != null && !this.m.Body.isNull() && this.m.Body.isAlive();
+		// Crash fix (15 Nov): Tactical.getEntityByID returns the body itself, not a weak reference,
+		// so Body.isNull() threw on every lookup and the game crashed when a part was attacked.
+		// ::MSU.isNull handles both.
+		return !::MSU.isNull(this.m.Body) && this.m.Body.isAlive();
 	}
 
 	function getBody()
@@ -197,6 +200,13 @@ this.chaos_mind_red_dragon_part <- this.inherit("scripts/entity/tactical/actor",
 		injury.Visible = false;
 		local blood = this.addSprite("body_blood");
 		blood.Visible = false;
+		// The game's own placement and faction code asks for these (log: "Could not get Sprite with
+		// ID 'arrow'" / "'socket'"); invisible, as the body's sprite covers the hex.
+		foreach (name in [ "socket", "arrow" ])
+		{
+			local s = this.addSprite(name);
+			s.Visible = false;
+		}
 		this.addDefaultStatusSprites();
 	}
 });

@@ -267,7 +267,7 @@ At **750 kills** on the blade, the next town you come to offers a contract to sl
 - Every third turn it **roars**, and every brother nearby checks morale.
 - Every fourth turn, and when its health first falls below two thirds and one third, it **takes to the sky**: for one turn it can't be seen or hurt, then it lands somewhere else.
 
-Its hoard and scales go to whoever slays it. With the setting on, **Ctrl+Shift+D** spawns one in any battle to try the fight.
+Its hoard and scales go to whoever slays it. To try the fight without the contract, press **Ctrl+D** (works with the setting off too): on the world map a Red Dragon lands next to your company and attacks it; in a battle one joins the fight.
 
 ## Leader duels
 
@@ -303,7 +303,7 @@ A book with the full explanation of every item, skill and perk above, so the too
 | **Ctrl+F** | World map | Where The Frozen Eye is; once the sword is claimed, where the Black Skull's marked party is |
 | **Ctrl+G** | World map, battle | Open or close the Chaos Guide |
 | **Ctrl+B** | World map | *Experimental:* where every boss is, nearest first: the game's legendary locations and this mod's running hunts |
-| **Ctrl+Shift+D** | Battle | *Experimental:* spawn a Red Dragon to test it (only with the Red Dragon setting on) |
+| **Ctrl+D** | World map, battle | *Experimental:* on the map a Red Dragon lands next to your company and attacks it; in battle one joins the fight |
 
 All of them can be changed in Mod Settings.
 

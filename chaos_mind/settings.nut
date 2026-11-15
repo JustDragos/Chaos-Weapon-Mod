@@ -22,7 +22,7 @@
     NormalEnemySpeed = null,
     RedDragon = null,
 
-    // Mod Settings -> Chaos Mind -> Dev / Game breaking: the Red Dragon contract and test key.
+    // Mod Settings -> Chaos Mind -> Dev / Game breaking: the Red Dragon contract (not the key).
     function isRedDragonOn()
     {
         return this.RedDragon != null && this.RedDragon.getValue() == true;
@@ -188,12 +188,12 @@ page.addTitle("RecruitingTitle", "Recruiting");
 ::ChaosMind.Settings.MaxHiringCost = page.addRangeSetting("MaxHiringCost", 0, 0, 3000, 10, "Max hiring cost (0 = no cap)",
     "No recruit costs more than this many crowns to hire. 0 (the default) leaves prices as they are. Their daily wage and the tryout fee don't change.");
 
-// Red Dragon (14 Nov): the contract at 750 kills and the Ctrl+Shift+D battle test. Off by default
+// Red Dragon (14 Nov): the contract at 750 kills (the dragon key is separate). Off by default
 // since v1.0.1 (on your "Confirmed game breaking" list); a dragon hunt already accepted runs on
 // either way. MSU keeps each save's own value, so saves that had it on keep it on.
 page.addTitle("ContentTitle", "Extra content");
 ::ChaosMind.Settings.RedDragon = page.addBooleanSetting("RedDragon", false, "Red Dragon (experimental)",
-    "A seven-hex dragon boss: towns offer a contract to slay it once Chaos Mind has 750 kills, and Ctrl+Shift+D spawns one in any battle for testing. Off by default: it's experimental and can break battles. Off: no new dragon contracts and the test key does nothing; a dragon hunt already accepted goes on.");
+    "A seven-hex dragon boss: towns offer a contract to slay it once Chaos Mind has 750 kills. Off by default: it's experimental and can break battles. Off: no new dragon contracts; a dragon hunt already accepted goes on. The dragon key (Ctrl+D) works either way: on the world map a dragon attacks your company, in battle one joins the fight.");
 
 // Leader duels (13 Nov, evening), off by default because every duel crashed at round start
 // ("Class/Structure with key "" is not registered").

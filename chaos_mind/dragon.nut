@@ -14,9 +14,10 @@
 //      * otherwise (and after a roar): breathes fire in a cone in front of its head.
 //  - It starts every battle in the air and lands on its first turn, so its footprint is always on
 //    clear ground.
-//  - Battle test: Ctrl+Shift+D in a battle spawns one (Mod Settings > Keybinds to change).
-//  - Mod Settings -> Dev / Game breaking -> Red Dragon (14 Nov, on by default) switches off new
-//    contracts and the test key; an accepted hunt goes on.
+//  - The dragon key (Ctrl+D since 15 Nov, Mod Settings > Keybinds to change): on the world map a Red
+//    Dragon party lands next to the company and attacks it; in a battle one joins the fight.
+//  - Mod Settings -> Dev / Game breaking -> Red Dragon (off by default since v1.0.1) switches the
+//    contract on; the key works either way; an accepted hunt goes on.
 // Names come from the readable Legends copies (legend_stollwurm, legend_firefield_skill,
 // legend_teleport_skill, hidden_effect, swallow whole); vanilla's own scripts are encrypted.
 ::ChaosMind.Dragon <- {
@@ -730,25 +731,17 @@
 
     // ---- Battle test ----
 
-    // Ctrl+Shift+D (14 Nov: fires on the key going down, and every attempt is logged, after a press
-    // did nothing and left nothing in the log). A line also goes to the combat log.
+    // The dragon key (Ctrl+D by default; 15 Nov: "when pressing the keybind I want to be
+    // attacked by the dragon"). On the world map a Red Dragon party lands next to the company and
+    // comes for it; in battle one drops into the fight. Pressing the key is the opt-in, so it works
+    // with the Red Dragon setting off too (that setting is for the contract). Every press is logged.
     function onTestKey()
     {
-        ::logInfo("Chaos Mind: Ctrl+Shift+D pressed (spawn a test Red Dragon).");
+        ::logInfo("Chaos Mind: the Red Dragon key was pressed (" + (::Tactical.isActive() ? "battle" : "world map") + ").");
 
-        if (!::ChaosMind.Settings.isRedDragonOn())
+        if (!::Tactical.isActive())
         {
-            ::logInfo("Chaos Mind: no test Red Dragon, it's switched off (Mod Settings -> Dev / Game breaking).");
-
-            try
-            {
-                ::Tactical.EventLog.log("The Red Dragon is switched off in Mod Settings (Dev / Game breaking).");
-            }
-            catch (e)
-            {
-            }
-
-            return true;
+            return this.onWorldKey();
         }
 
         local spawned = false;
@@ -771,6 +764,223 @@
         }
 
         return true;
+    }
+
+    // Mod Settings -> Dev / Game breaking -> "Summon the Red Dragon" (15 Nov, after Ctrl+D also
+    // never reached the mod). The button is pressed with the settings screen open, so the summon
+    // waits: a real-time poll every PollMs lands it once no menu is open, on the world map (it
+    // attacks the company) or in battle (it joins the fight). Gives up after PollTries.
+    SummonPending = false,
+    SummonTries = 0,
+    PollMs = 250,
+    PollTries = 480,
+
+    function requestSummon()
+    {
+        if (this.SummonPending)
+        {
+            return;
+        }
+
+        this.SummonPending = true;
+        this.SummonTries = 0;
+        ::logInfo("Chaos Mind: Red Dragon summoned from Mod Settings; it comes once the menus are closed.");
+        this.scheduleSummonPoll();
+    }
+
+    function scheduleSummonPoll()
+    {
+        try
+        {
+            ::Time.scheduleEvent(::TimeUnit.Real, this.PollMs, function( _data )
+            {
+                ::ChaosMind.Dragon.pollSummon();
+            }, null);
+        }
+        catch (e)
+        {
+            this.SummonPending = false;
+            ::logError("Chaos Mind: the Red Dragon summon could not wait for the menus (" + e + ").");
+        }
+    }
+
+    function isClearToSummon()
+    {
+        if (::Tactical.isActive())
+        {
+            local t = ::Tactical.State;
+            return t != null && !t.m.MenuStack.hasBacksteps();
+        }
+
+        local w = ::World.State;
+        return w != null && w.getPlayer() != null && !w.m.MenuStack.hasBacksteps()
+            && !w.m.EventScreen.isVisible() && !w.m.EventScreen.isAnimating();
+    }
+
+    function pollSummon()
+    {
+        if (!this.SummonPending)
+        {
+            return;
+        }
+
+        this.SummonTries += 1;
+        local clear = false;
+
+        try
+        {
+            clear = this.isClearToSummon();
+        }
+        catch (e)
+        {
+        }
+
+        if (clear)
+        {
+            this.SummonPending = false;
+            this.onTestKey();
+            return;
+        }
+
+        if (this.SummonTries >= this.PollTries)
+        {
+            this.SummonPending = false;
+            ::logInfo("Chaos Mind: Red Dragon summon given up; no campaign map or battle came up within two minutes.");
+            return;
+        }
+
+        this.scheduleSummonPoll();
+    }
+
+    // World map: a Red Dragon party right next to the company. The game's own party AI makes it
+    // attack ("You are being attacked"); a notice says so, and if it hesitates the player can click
+    // it to fight. Not a contract target: no pay, nothing in the contract flags.
+    function onWorldKey()
+    {
+        local lines;
+
+        try
+        {
+            local state = ::World.State;
+
+            if (state == null || state.getPlayer() == null)
+            {
+                return false;
+            }
+
+            if (state.m.EventScreen.isVisible() || state.m.MenuStack.hasBacksteps())
+            {
+                ::logInfo("Chaos Mind: no Red Dragon ambush, a window or town screen is open.");
+                return false;
+            }
+
+            // No window when it lands (15 Nov, "remove the pop up for now"): the game's own
+            // "you are being attacked" screen follows. Failures still say why.
+            if (this.spawnAmbush() != null)
+            {
+                return true;
+            }
+
+            lines = [ "No Red Dragon could land here: no free tile next to your company.", "Move off the mountains or the coast and try again." ];
+        }
+        catch (e)
+        {
+            ::logError("Chaos Mind: the Red Dragon ambush failed (" + e + ").");
+            lines = [ "The Red Dragon could not land (see log.html)." ];
+        }
+
+        ::ChaosMind.Notice.close();
+        ::ChaosMind.Notice.toggle("The Red Dragon", lines);
+        return true;
+    }
+
+    // A free, walkable world tile 1 to 3 tiles from _from, nearest first.
+    function findAmbushTile( _from )
+    {
+        local t = ::Const.World.TerrainType;
+
+        for (local d = 1; d <= 3; ++d)
+        {
+            for (local dx = -d; dx <= d; ++dx)
+            {
+                for (local dy = -d; dy <= d; ++dy)
+                {
+                    local x = _from.SquareCoords.X + dx;
+                    local y = _from.SquareCoords.Y + dy;
+
+                    if (!::World.isValidTileSquare(x, y))
+                    {
+                        continue;
+                    }
+
+                    local tile = ::World.getTileSquare(x, y);
+
+                    if (tile.getDistanceTo(_from) != d || tile.IsOccupied || tile.Type == t.Ocean || tile.Type == t.Shore || tile.Type == t.Mountains)
+                    {
+                        continue;
+                    }
+
+                    return tile;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    function spawnAmbush()
+    {
+        local player = ::World.State.getPlayer();
+        local tile = this.findAmbushTile(player.getTile());
+        local faction = ::ChaosMind.Quest.getFaction("Beasts");
+
+        if (tile == null || faction == null)
+        {
+            ::logWarning("Chaos Mind: no Red Dragon ambush (" + (tile == null ? "no free tile next to the company" : "no beast faction") + ").");
+            return null;
+        }
+
+        local template = ("Lindwurm" in ::Const.World.Spawn) ? ::Const.World.Spawn.Lindwurm : ::Const.World.Spawn.BanditRaiders;
+        local party = faction.spawnEntity(tile, this.PartyName, false, template, 100);
+
+        if (party == null)
+        {
+            ::logError("Chaos Mind: the Red Dragon ambush party could not be created.");
+            return null;
+        }
+
+        local steps = [
+            [ "its dragon", function( _party )
+            {
+                _party.getTroops().clear();
+                ::Const.World.Common.addTroop(_party, { Type = ::Const.World.Spawn.Troops.ChaosMindRedDragon }, true, 0);
+            } ],
+            [ "its look", function( _party )
+            {
+                _party.setDescription(this.Description);
+                _party.getFlags().set("ChaosMind.DragonAmbush", true);
+                ::ChaosMind.markTarget(_party);
+            } ],
+            [ "protection from other parties", function( _party )
+            {
+                _party.setAttackableByAI(false);
+            } ]
+        ];
+
+        foreach (step in steps)
+        {
+            try
+            {
+                step[1].call(this, party);
+            }
+            catch (e)
+            {
+                ::logWarning("Chaos Mind: the Red Dragon ambush got no " + step[0] + " (" + e + ").");
+            }
+        }
+
+        ::logInfo("Chaos Mind: a Red Dragon lands " + tile.getDistanceTo(player.getTile()) + " tile(s) from the company to attack it (dragon key).");
+        return party;
     }
 
     // Spawns a dragon on a free hex as far as possible from the company (it lands on its first turn).
@@ -914,19 +1124,93 @@ if ("Name" in ::Const.AI.Behavior)
     ::ChaosMind.Dragon.check();
 });
 
+// 15 Nov: Ctrl+D under a new ID. The game never delivered Shift to the mod: Ctrl+Shift+B pressed
+// on the world map arrived as Ctrl+B (the boss list opened), and no Ctrl+Shift combo ever fired.
+// The new ID also drops the old saved binding, which kept a Shift combo.
 ::ChaosMind.Mod.Keybinds.addSQKeybind(
-    "spawnRedDragon",
-    "ctrl+shift+d",
-    ::MSU.Key.State.Tactical,
+    "redDragonKey",
+    "ctrl+d",
+    // World map too since 15 Nov: there it sends a Red Dragon at the company.
+    ::MSU.Key.State.World | ::MSU.Key.State.Tactical,
     function()
     {
         return ::ChaosMind.Dragon.onTestKey();
     },
-    "Battle test: spawn the Red Dragon (experimental)",
+    "Red Dragon: attack my company / join this battle (experimental)",
     // On the key going down (MSU's default is on release, which misses if Ctrl or Shift is let go
     // before D).
     ::MSU.Key.KeyState.Press
 );
+
+// The summon button (15 Nov), under Extra content next to the Red Dragon setting.
+try
+{
+    local page = ::ChaosMind.Mod.ModSettings.getPage("DevGameBreaking");
+    local button = page.addButtonSetting("SummonRedDragon", "", "Summon Red Dragon",
+        "After you close Mod Settings, a Red Dragon lands next to your company on the world map and attacks it; in a battle it joins the fight. Works with the Red Dragon setting off. The same as the Ctrl+D key.");
+    button.addCallback(function()
+    {
+        ::ChaosMind.Dragon.requestSummon();
+    });
+}
+catch (e)
+{
+    ::logWarning("Chaos Mind: the 'Summon the Red Dragon' button could not be added (" + e + ").");
+}
+
+// World map diagnostics (15 Nov): D pressed with Ctrl held is logged with the keys MSU saw held,
+// and the first time the map runs the dragon key's binding is logged, so a Ctrl+D that does
+// nothing shows why.
+::ChaosMind.HooksMod.hook("scripts/states/world_state", function(q)
+{
+    if (!q.contains("onKeyInput", true))
+    {
+        return;
+    }
+
+    q.onKeyInput = @(__original) function( _key )
+    {
+        try
+        {
+            local map = ::MSU.Key.KeyMapSQ;
+            local code = _key.getKey().tostring();
+
+            if (code in map && map[code] == "d" && _key.getState() == 1)
+            {
+                local held = [];
+
+                foreach (k, _ in ::MSU.System.Keybinds.PressedKeys)
+                {
+                    if (k != "d")
+                    {
+                        held.push(k);
+                    }
+                }
+
+                if (held.find("ctrl") != null)
+                {
+                    held.sort();
+                    ::logInfo("Chaos Mind: key D pressed on the world map with " + held.reduce(@(a, b) a + "+" + b) + " held; the dragon key is " + ::ChaosMind.getHotkey("redDragonKey", "?") + ".");
+                }
+            }
+        }
+        catch (e)
+        {
+        }
+
+        return __original(_key);
+    }
+});
+
+::ChaosMind.Dragon.KeyLogged <- false;
+::ChaosMind.addWorldCheck("Red Dragon key log", function()
+{
+    if (!::ChaosMind.Dragon.KeyLogged)
+    {
+        ::ChaosMind.Dragon.KeyLogged = true;
+        ::logInfo("Chaos Mind: the Red Dragon key is " + ::ChaosMind.getHotkey("redDragonKey", "not bound") + " (world map and battle).");
+    }
+});
 
 // Diagnostics (14 Nov): in battle, D pressed with Ctrl or Shift held is logged with the keys MSU
 // saw held, so a missed Ctrl+Shift+D shows why. Runs before MSU's own handling and changes nothing.

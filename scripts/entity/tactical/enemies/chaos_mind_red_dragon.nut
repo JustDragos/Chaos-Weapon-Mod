@@ -122,6 +122,13 @@ this.chaos_mind_red_dragon <- this.inherit("scripts/entity/tactical/actor", {
 		injury.Visible = false;
 		local blood = this.addSprite("body_blood");
 		blood.Visible = false;
+		// Asked for by the game's placement and faction code (log: "Could not get Sprite with ID
+		// 'socket'"); invisible, a base disc under a seven-hex dragon would look wrong.
+		foreach (name in [ "socket", "arrow" ])
+		{
+			local s = this.addSprite(name);
+			s.Visible = false;
+		}
 		this.addDefaultStatusSprites();
 		this.setHeadDirection(this.m.HeadDirection);
 
@@ -198,9 +205,11 @@ this.chaos_mind_red_dragon <- this.inherit("scripts/entity/tactical/actor", {
 			try
 			{
 				local part = this.Tactical.spawnEntity(::ChaosMind.Dragon.PartScript, t.Coords.X, t.Coords.Y, this.getID());
+				// Recorded first (15 Nov): setFaction used to throw, and the part stayed on the board
+				// untracked, so the body could never take it off again.
+				this.m.Parts.push(this.WeakTableRef(part));
 				part.setRole(r[1]);
 				part.setFaction(this.getFaction());
-				this.m.Parts.push(this.WeakTableRef(part));
 			}
 			catch (e)
 			{
