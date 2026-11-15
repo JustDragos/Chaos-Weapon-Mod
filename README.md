@@ -12,7 +12,8 @@
 </p>
 
 <p align="center">
-  <a href="../../releases/latest"><b>Download the latest release</b></a> ·
+  <a href="https://www.nexusmods.com/battlebrothers/mods/1306"><b>Download on Nexus Mods</b></a> ·
+  <a href="../../releases/latest">GitHub release</a> ·
   In game the mod registers as <b>Chaos Mind</b> (<code>mod_chaos_mind</code>) ·
   <a href="#license-and-credit">CC BY 4.0</a>
 </p>
@@ -56,7 +57,7 @@
 - [Modern Hooks](https://www.nexusmods.com/battlebrothers/mods/685)
 
 **Steps:**
-1. Download `mod_chaos_mind.zip` from the [latest release](../../releases/latest).
+1. Download Chaos Mind from [Nexus Mods](https://www.nexusmods.com/battlebrothers/mods/1306) or the [latest GitHub release](../../releases/latest).
 2. Put it in the game's `data` folder, next to MSU and Modern Hooks.
 
 To build the zip yourself, zip the folders `brushes`, `chaos_mind`, `gfx`, `scripts` and `ui` so that they sit at the top level of the zip.
